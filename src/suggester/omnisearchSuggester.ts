@@ -92,6 +92,14 @@ export default class OmnisearchSuggester extends TextInputSuggester<ResultNoteAp
     }
 
     useSelectedItem(selectedItem: ResultNoteApi, newTab?: boolean): void {
+        // 标题跳转
+        const pluginSettings = this.plugin.settings;
+        const headingMatch = selectedItem.matches?.find(match => match.match && selectedItem.path && match.match && match.match !== selectedItem.basename && match.offset > 0);
+        if (pluginSettings.autoJumpToHeading && headingMatch && headingMatch.match) {
+            const link = `${selectedItem.path}#${headingMatch.match}`;
+            this.app.workspace.openLinkText(link, '', newTab ?? false);
+            return;
+        }
         const file = this.app.vault.getAbstractFileByPath(selectedItem.path)
         if(file && file instanceof TFile){
             this.openFile(file, newTab)
