@@ -48,7 +48,8 @@ export interface HomeTabSettings extends ObjectKeys{
     markdownOnly: boolean
     unresolvedLinks: boolean
     searchTitle: boolean
-    searchHeadings: boolean
+    searchHeadings: boolean // 是否启用标题（heading）搜索
+    autoJumpToHeading?: boolean // 新增：标题匹配时自动跳转到 heading
     recentFilesStore: recentFileStore[]
     bookmarkedFileStore: bookmarkedFileStore[]
     searchDelay: number
@@ -74,8 +75,8 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     fontWeight: 600,
     maxResults: 5,
     showbookmarkedFiles: app.internalPlugins.getPluginById('bookmarks') ? true : false,
-    showRecentFiles: false,
-    maxRecentFiles: 5,
+    showRecentFiles: true,
+    maxRecentFiles: 12,
     storeRecentFile: true,
     showPath: true,
     selectionHighlight: 'default',
@@ -84,6 +85,7 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     unresolvedLinks: false,
     searchTitle: false,
     searchHeadings: true,
+    autoJumpToHeading: true, // 新增：标题匹配时自动跳转到 heading，默认开启
     recentFilesStore: [],
     bookmarkedFileStore: [],
     searchDelay: 0,
@@ -166,7 +168,16 @@ export class HomeTabSettingTab extends PluginSettingTab{
                 .setDesc('Enable this to search through document headings (# Title).')
                 .addToggle(toggle => toggle
                     .setValue(this.plugin.settings.searchHeadings)
-                    .onChange(value => {this.plugin.settings.searchHeadings = value; this.plugin.saveSettings(); this.plugin.refreshOpenViews()}))
+                    .onChange(value => {this.plugin.settings.searchHeadings = value; this.plugin.saveSettings(); this.plugin.refreshOpenViews(); this.display();}))
+            // 仅在启用 Search Headings 时显示“标题匹配时自动跳转到 heading”
+            if(this.plugin.settings.searchHeadings){
+                new Setting(containerEl)
+                    .setName('Jump to Heading')
+                    .setDesc('When search results match headings, clicking will automatically jump to the corresponding heading.')
+                    .addToggle(toggle => toggle
+                        .setValue(this.plugin.settings.autoJumpToHeading ?? true)
+                        .onChange(value => {this.plugin.settings.autoJumpToHeading = value; this.plugin.saveSettings();}))
+            }
             
             new Setting(containerEl)
                 .setName('Show file path')

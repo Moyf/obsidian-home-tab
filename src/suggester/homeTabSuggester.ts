@@ -176,6 +176,15 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
     }
 
     useSelectedItem(selectedItem: Fuse.FuseResult<SearchFile>, newTab?: boolean): void {
+        // 标题跳转
+        const item = selectedItem.item;
+        const pluginSettings = this.plugin.settings;
+        const headingMatch = selectedItem.matches?.find(match => match.key === 'headings');
+        if (pluginSettings.autoJumpToHeading && headingMatch && headingMatch.value) {
+            const link = `${item.path}#${headingMatch.value}`;
+            this.app.workspace.openLinkText(link, '', newTab ?? false);
+            return;
+        }
         // 处理 WebViewer URL
         if (selectedItem.item.isWebUrl) {
             const leaf = newTab 
@@ -272,8 +281,8 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
             const files = this.files.filter(file => file.fileType === 'markdown')
             if(files.map(file => file.basename).includes(input)){
                 const fileToOpen = files.find(f => f.basename === input)?.file
-                if(fileToOpen){
-                    return this.openFile(fileToOpen, newTab)
+                if(fileToOpen && fileToOpen instanceof TFile){
+                    this.openFile(fileToOpen, newTab)
                 }
             }
             newFile = await this.app.vault.create(normalizePath(`${this.app.fileManager.getNewFileParent('').path}/${input}.md`), '')
