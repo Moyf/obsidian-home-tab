@@ -46,6 +46,7 @@ export interface HomeTabSettings extends ObjectKeys{
     selectionHighlight: ColorChoices
     showShortcuts: boolean
     markdownOnly: boolean
+    additionalExtensions: string // 新增：额外搜索的文件后缀名，英文逗号分隔
     unresolvedLinks: boolean
     searchTitle: boolean
     searchHeadings: boolean // 是否启用标题（heading）搜索
@@ -82,6 +83,7 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     selectionHighlight: 'default',
     showShortcuts: true,
     markdownOnly: false,
+    additionalExtensions: '', // 新增：额外搜索的文件后缀名，默认为空
     unresolvedLinks: false,
     searchTitle: false,
     searchHeadings: true,
@@ -148,7 +150,17 @@ export class HomeTabSettingTab extends PluginSettingTab{
                 .setName('Search only markdown files')
                 .addToggle(toggle => toggle
                     .setValue(this.plugin.settings.markdownOnly)
-                    .onChange(value => {this.plugin.settings.markdownOnly = value; this.plugin.saveSettings(); this.plugin.refreshOpenViews()}))
+                    .onChange(value => {this.plugin.settings.markdownOnly = value; this.plugin.saveSettings(); this.plugin.refreshOpenViews(); this.display()}))
+            
+            // 仅在启用 markdownOnly 时显示额外搜索后缀名设置
+            if(this.plugin.settings.markdownOnly){
+                new Setting(containerEl)
+                    .setName('Additional extensions to search')
+                    .setDesc('Comma-separated list of file extensions to search (without the dot). Example: form, base')
+                    .addText(text => text
+                        .setValue(this.plugin.settings.additionalExtensions)
+                        .onChange(value => {this.plugin.settings.additionalExtensions = value; this.plugin.saveSettings(); this.plugin.refreshOpenViews()}))
+            }
     
             new Setting(containerEl)
                 .setName('Show uncreated files')

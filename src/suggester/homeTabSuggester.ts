@@ -45,7 +45,24 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         this.searchBar = searchBar
 
         this.app.metadataCache.onCleanCache(() => {
-            this.plugin.settings.markdownOnly ? this.files = this.filterSearchFileArray('markdown', getSearchFiles(this.plugin.settings.unresolvedLinks)) : this.files = getSearchFiles(this.plugin.settings.unresolvedLinks)
+            if (this.plugin.settings.markdownOnly) {
+                // 获取所有文件
+                const allFiles = getSearchFiles(this.plugin.settings.unresolvedLinks);
+                
+                // 先过滤出 markdown 文件
+                let filteredFiles = this.filterSearchFileArray('markdown', allFiles);
+                
+                // 如果设置了额外的后缀名，添加这些文件
+                if (this.plugin.settings.additionalExtensions) {
+                    const additionalFiles = this.getAdditionalExtensionFiles(allFiles);
+                    filteredFiles = [...filteredFiles, ...additionalFiles];
+                }
+                
+                this.files = filteredFiles;
+            } else {
+                this.files = getSearchFiles(this.plugin.settings.unresolvedLinks);
+            }
+            
             this.fuzzySearch = new FileFuzzySearch(this.files, { 
                 ...DEFAULT_FUSE_OPTIONS, 
                 ignoreLocation: true, 
@@ -303,11 +320,50 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         }
     }
 
+    /**
+     * 从文件数组中过滤出具有额外后缀名的文件
+     * @param files 要过滤的文件数组
+     * @returns 符合额外后缀名的文件数组
+     */
+    getAdditionalExtensionFiles(files: SearchFile[]): SearchFile[] {
+        // 如果没有设置额外后缀名，返回空数组
+        if (!this.plugin.settings.additionalExtensions) {
+            return [];
+        }
+        
+        // 解析额外后缀名，去除空格并转为小写
+        const extensions = this.plugin.settings.additionalExtensions
+            .split(',')
+            .map(ext => ext.trim().toLowerCase())
+            .filter(ext => ext.length > 0);
+            
+        // 如果没有有效的后缀名，返回空数组
+        if (extensions.length === 0) {
+            return [];
+        }
+        
+        // 过滤出符合额外后缀名的文件
+        return files.filter(file => {
+            if (!file.extension) return false;
+            return extensions.includes(file.extension.toLowerCase());
+        });
+    }
+    
     setFileFilter(filterKey: FileType | FileExtension): void{
         this.activeFilter = filterKey
         
         this.app.metadataCache.onCleanCache(() => {
-            this.fuzzySearch.updateSearchArray(this.filterSearchFileArray(filterKey, this.plugin.settings.markdownOnly ? getSearchFiles(this.plugin.settings.unresolvedLinks) : this.files))
+            let filesToFilter = this.plugin.settings.markdownOnly ? getSearchFiles(this.plugin.settings.unresolvedLinks) : this.files;
+            
+            // 如果启用了 markdownOnly 并且有额外后缀名，需要特殊处理
+            if (this.plugin.settings.markdownOnly && this.plugin.settings.additionalExtensions && filterKey === 'markdown') {
+                let filteredFiles = this.filterSearchFileArray(filterKey, filesToFilter);
+                const additionalFiles = this.getAdditionalExtensionFiles(filesToFilter);
+                filteredFiles = [...filteredFiles, ...additionalFiles];
+                this.fuzzySearch.updateSearchArray(filteredFiles);
+            } else {
+                this.fuzzySearch.updateSearchArray(this.filterSearchFileArray(filterKey, filesToFilter));
+            }
         })
         
         this.suggester.setSuggestions([]) // Reset search suggestions
