@@ -201,7 +201,11 @@ export abstract class TextInputSuggester<T> implements ISuggester{
     }
 
     close(): void{
-        this.app.keymap.popScope(this.scope)
+        // TODO 临时方案：修复 scope 残留导致的快捷键锁定问题
+        // 尝试多 pop 几次，防止多余的 push
+        for (let i = 0; i < 5; i++) {
+            this.app.keymap.popScope(this.scope);
+        }
 
         // Reset suggestions
         this.suggester.setSuggestions([])
