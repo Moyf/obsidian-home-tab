@@ -30,6 +30,7 @@ interface ISuggester{
     getDisplayElementProps: Function
     scrollSelectedItemIntoView: Function
     onNoSuggestion: Function
+    closeAfterUse?: Function  // 添加可选的关闭方法
 }
 
 export class Suggester<T>{
@@ -66,7 +67,14 @@ export class Suggester<T>{
         })
         scope.register([], 'Enter', (e) => {
             e.preventDefault()
-            this.ISuggester.useSelectedItem(this.getSelectedItem())
+            const selectedItem = this.getSelectedItem()
+            if (selectedItem) {
+                this.ISuggester.useSelectedItem(selectedItem)
+                // 如果实现了 closeAfterUse 方法，则在使用选中项后自动关闭
+                if (this.ISuggester.closeAfterUse) {
+                    this.ISuggester.closeAfterUse()
+                }
+            }
         })
     }
 
@@ -155,6 +163,11 @@ export abstract class TextInputSuggester<T> implements ISuggester{
         this.suggestionParentContainer = suggestionParentContainer;
         this.closingAnimationRunning = false;
     }
+    
+    // 在使用选中项后自动关闭建议器
+    closeAfterUse(): void {
+        this.close();
+    }
 
     async onInput(): Promise<void>{
         const input = this.inputEl.value
@@ -180,13 +193,20 @@ export abstract class TextInputSuggester<T> implements ISuggester{
         return this.suggestionParentContainer
     }
 
+    // 跟踪作用域是否已被推入堆栈
+    private scopeActive = false;
+
     open(): void{
         if(this.closingAnimationRunning) this.abortClosingAnimation()
         if(this.suggesterView) return
         
         this.suggestionContainer = this.getContainerEl()
 
-        this.app.keymap.pushScope(this.scope)
+        // 只有在作用域未激活时才推入
+        if (!this.scopeActive) {
+            this.app.keymap.pushScope(this.scope)
+            this.scopeActive = true;
+        }
 
         this.suggesterView = new suggesterView({
             target: this.suggestionContainer,
@@ -201,10 +221,10 @@ export abstract class TextInputSuggester<T> implements ISuggester{
     }
 
     close(): void{
-        // TODO 临时方案：修复 scope 残留导致的快捷键锁定问题
-        // 尝试多 pop 几次，防止多余的 push
-        for (let i = 0; i < 5; i++) {
+        // 清理键盘作用域
+        if (this.scopeActive) {
             this.app.keymap.popScope(this.scope);
+            this.scopeActive = false;
         }
 
         // Reset suggestions
@@ -230,10 +250,18 @@ export abstract class TextInputSuggester<T> implements ISuggester{
         this.closingAnimationRunning = false
     }
     
+
+
     destroy(): void{
         this.close()
         this.inputEl.removeEventListener('input', this.inputListener)
-        this.inputEl.removeEventListener('focus', this.inputListener)
+        this.inputEl.removeEventListener('blur', this.close.bind(this))
+        
+        // 最后确保作用域被清理
+        if (this.scopeActive) {
+            this.app.keymap.popScope(this.scope);
+            this.scopeActive = false;
+        }
     }
     
     scrollSelectedItemIntoView(): void{
