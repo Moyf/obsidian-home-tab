@@ -71,7 +71,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                     {name: 'basename', weight: 1.5}, 
                     {name: 'aliases', weight: 0.1},
                     ...(this.plugin.settings.searchTitle ? [{name: 'title', weight: 1.2}] : []),
-                    ...(this.plugin.settings.searchHeadings ? [{name: 'headings', weight: 1.0}] : [])
+                    ...(this.plugin.settings.searchHeadings ? [{name: 'headings', weight: 0.6}] : [])
                 ] 
             })
         })
@@ -255,6 +255,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         }
 
         // Check if the match is from a heading
+        // 渲染结果
         if (this.plugin.settings.searchHeadings && suggestion.matches) {
             const headingMatch = suggestion.matches.find(match => match.key === 'headings');
             if (headingMatch && typeof headingMatch.value === 'string') {

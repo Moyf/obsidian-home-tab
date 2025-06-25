@@ -46,8 +46,79 @@ class fuzzySearch<T>{
         this.fuse = new Fuse(searchArray, searchOptions)
     }
 
-    rawSearch(querry: string, limit?: number): Fuse.FuseResult<T>[]{
-        return this.fuse.search(querry, limit ? {limit: limit} : undefined)
+    rawSearch(query: string, limit?: number): Fuse.FuseResult<T>[]{
+        // return this.fuse.search(query, limit ? {limit: limit} : undefined);
+
+        const results = this.fuse.search(query, limit ? { limit } : undefined);
+
+        // 自定义排序：aliases > basename > title，且匹配位置越靠前越优先
+        results.sort((a, b) => {
+            // 默认按分数
+            return (a.score ?? 0) - (b.score ?? 0);
+            
+            // 匹配比例（完全匹配优先，其次前缀匹配，再其次包含匹配）
+            const getBestRatio = (item: Fuse.FuseResult<any>): number => {
+                if (!item.matches || item.matches.length === 0) return 0;
+                // 取所有字段的最佳比例
+                let best = 0;
+                for (const m of item.matches) {
+                    if (typeof m.value === 'string' && m.indices.length > 0) {
+                        for (const [start, end] of m.indices) {
+                            const matchLen = end - start + 1;
+                            const totalLen = m.value.length;
+                            // 完全匹配
+                            if (matchLen === totalLen && start === 0) return 3;
+                            // 前缀匹配
+                            if (start === 0) best = Math.max(best, 2);
+                            // 只要包含
+                            best = Math.max(best, 1);
+                        }
+                    }
+                }
+                return best;
+            };
+
+            const aRatio = getBestRatio(a);
+            const bRatio = getBestRatio(b);
+            
+            // if (aRatio !== bRatio) return bRatio - aRatio; // 比例高的排前面
+
+            // 字段优先级（越小越低！）
+            const getFieldPriority = (matches: readonly Fuse.FuseResultMatch[] | undefined): number => {
+                // console.log(matches)
+                if (!matches) return 0;
+                
+                if (matches.some(m => m.key === 'headings')) return 1;
+                if (matches.some(m => m.key === 'aliases')) return 2;
+                if (matches.some(m => m.key === 'basename')) return 3;
+                if (matches.some(m => m.key === 'title')) return 4;
+                
+                return 3;
+            };
+
+            const aPriority = getFieldPriority(a.matches);
+            const bPriority = getFieldPriority(b.matches);
+
+
+            // 匹配位置优先
+            const getMinIndex = (matches: readonly Fuse.FuseResultMatch[] | undefined): number => {
+                if (!matches) return Number.MAX_SAFE_INTEGER;
+                let min = Number.MAX_SAFE_INTEGER;
+                for (const m of matches) {
+                    if (Array.isArray(m.indices) && m.indices.length > 0) {
+                        min = Math.min(min, m.indices[0][0]);
+                    }
+                }
+                return min;
+            };
+
+            const aIndex = getMinIndex(a.matches);
+            const bIndex = getMinIndex(b.matches);
+            if (aIndex !== bIndex) return aIndex - bIndex;
+
+        });
+
+        return results;
     }
 
     filteredSearch(querry: string, scoreThreshold: number = 0.25, maxResults: number = 5){
@@ -138,6 +209,7 @@ export class FileFuzzySearch extends fuzzySearch<SearchFile>{
         
         return bestMatch ? bestMatch.item : searchFile.basename
     }
+
 }
 
 /**
