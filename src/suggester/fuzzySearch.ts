@@ -54,7 +54,7 @@ class fuzzySearch<T>{
         // 自定义排序：aliases > basename > title，且匹配位置越靠前越优先
         results.sort((a, b) => {
             // 默认按分数
-            return (a.score ?? 0) - (b.score ?? 0);
+            // return (a.score ?? 0) - (b.score ?? 0);
             
             // 匹配比例（完全匹配优先，其次前缀匹配，再其次包含匹配）
             const getBestRatio = (item: Fuse.FuseResult<any>): number => {
@@ -101,20 +101,32 @@ class fuzzySearch<T>{
 
 
             // 匹配位置优先
-            const getMinIndex = (matches: readonly Fuse.FuseResultMatch[] | undefined): number => {
-                if (!matches) return Number.MAX_SAFE_INTEGER;
-                let min = Number.MAX_SAFE_INTEGER;
+            // 匹配位置权重计算（越前面的权重越高，总分值3）
+			const indexWeight = 3;
+			const getMinIndex = (matches: readonly Fuse.FuseResultMatch[] | undefined): number => {
+                if (!matches) return 0;
+                let maxScore = 0;
                 for (const m of matches) {
                     if (Array.isArray(m.indices) && m.indices.length > 0) {
-                        min = Math.min(min, m.indices[0][0]);
+                        const text = m.value as string;
+                        const position = m.indices[0][0];
+                        // 计算位置比例权重：(1 - position/length) * 3
+                        const score = (1 - position / text.length) * indexWeight;
+                        maxScore = Math.max(maxScore, score);
                     }
                 }
-                return min;
+                return maxScore;
             };
 
             const aIndex = getMinIndex(a.matches);
             const bIndex = getMinIndex(b.matches);
-            if (aIndex !== bIndex) return aIndex - bIndex;
+
+			const aFinalScore = aIndex + aPriority + aRatio;
+			const bFinalScore = bIndex + bPriority + bRatio;
+			
+			return bFinalScore - aFinalScore;
+
+            // if (aIndex !== bIndex) return aIndex - bIndex;
 
         });
 
