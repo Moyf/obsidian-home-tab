@@ -69,7 +69,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                 fieldNormWeight: 1.65, 
                 keys: [
                     {name: 'basename', weight: 1.5}, 
-                    {name: 'aliases', weight: 0.1},
+                    {name: 'aliases', weight: 1},
                     ...(this.plugin.settings.searchTitle ? [{name: 'title', weight: 1.2}] : []),
                     ...(this.plugin.settings.searchHeadings ? [{name: 'headings', weight: 0.6}] : [])
                 ] 
