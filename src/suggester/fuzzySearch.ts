@@ -147,22 +147,17 @@ class fuzzySearch<T>{
 			const aFinalScore = aIndex + aPriority + aRatio + aMatchedCount;
 			const bFinalScore = bIndex + bPriority + bRatio + bMatchedCount;
 
-
-			const aName = (a.item as { basename?: string }).basename??"null";
-			const bName = (b.item as { basename?: string }).basename??"null";
-			if (!allScores.includes(aName)){
-				allScores.push(aName);
-				// console.log(a);
-				console.log(`${aName} 总分：${aFinalScore} \n位置得分：${aIndex} | 匹配来源：${aPriorityData.source} 对应优先级分：${aPriority} | 比例得分：${aRatio}（占比${aRatio/matchedRatioWeight}） | 匹配数量得分：${aMatchedCount}`)
-			}
-			if (!allScores.includes(bName)){
-				allScores.push(bName);
-				console.log(`${bName} 总分：${bFinalScore} \n位置得分：${bIndex} | 匹配来源：${bPriorityData.source} 对应优先级分：${bPriority} | 比例得分：${bRatio}（占比${bRatio/matchedRatioWeight}） | 匹配数量得分：${bMatchedCount}`)
-			}
-			
-			
-			// console.log(`${a.item}: ${aFinalScore}`)
-			// console.log(`${b.item}: ${bFinalScore}`)
+			// 查看计分结果和权重值
+			// const aName = (a.item as { basename?: string }).basename??"null";
+			// const bName = (b.item as { basename?: string }).basename??"null";
+			// if (!allScores.includes(aName)){
+			// 	allScores.push(aName);
+			// 	console.log(`${aName} 总分：${aFinalScore} \n位置得分：${aIndex} | 匹配来源：${aPriorityData.source} 对应优先级分：${aPriority} | 比例得分：${aRatio}（占比${aRatio/matchedRatioWeight}） | 匹配数量得分：${aMatchedCount}`)
+			// }
+			// if (!allScores.includes(bName)){
+			// 	allScores.push(bName);
+			// 	console.log(`${bName} 总分：${bFinalScore} \n位置得分：${bIndex} | 匹配来源：${bPriorityData.source} 对应优先级分：${bPriority} | 比例得分：${bRatio}（占比${bRatio/matchedRatioWeight}） | 匹配数量得分：${bMatchedCount}`)
+			// }
 			
 			return bFinalScore - aFinalScore;
 
