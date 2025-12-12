@@ -88,8 +88,7 @@ export class MatchAnalyzer {
         // 决定跳转行为
         analysis.shouldJumpToHeading = this.shouldJumpToHeading(analysis, query)
         
-        // 设置显示信息
-        analysis.displayInfo = this.getDisplayInfo(analysis, basenameMatch, headingMatch)
+        // displayInfo 已经在 calculateMatchIntent 中正确设置，不需要重新覆盖
 
         const intentName = {
             1: 'EXACT_FILE',

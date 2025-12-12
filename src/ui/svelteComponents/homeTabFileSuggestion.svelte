@@ -16,7 +16,7 @@
     export let matchedAlias: string | undefined = undefined
     export let matchedTitle: string | undefined = undefined
 
-    let suggestionItem = suggestion.item
+    $: suggestionItem = suggestion.item
 </script>
 
 <Suggestion {index} {textInputSuggester} {selectedItemIndex}
