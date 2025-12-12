@@ -193,14 +193,25 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
     }
 
     useSelectedItem(selectedItem: Fuse.FuseResult<SearchFile>, newTab?: boolean): void {
-        // 标题跳转
+        // 标题跳转逻辑优化：只有在标题匹配度比文件名/别名匹配度更高时才跳转
         const item = selectedItem.item;
         const pluginSettings = this.plugin.settings;
         const headingMatch = selectedItem.matches?.find(match => match.key === 'headings');
+        
         if (pluginSettings.autoJumpToHeading && headingMatch && headingMatch.value) {
-            const link = `${item.path}#${headingMatch.value}`;
-            this.app.workspace.openLinkText(link, '', newTab ?? false);
-            return;
+            // 检查是否有文件名或别名匹配
+            const filenameMatch = selectedItem.matches?.find(match => match.key === 'basename');
+            const aliasMatch = selectedItem.matches?.find(match => match.key === 'aliases');
+            const titleMatch = selectedItem.matches?.find(match => match.key === 'title');
+            
+            // 如果有文件名、别名或标题的直接匹配，优先打开文件而不是跳转标题
+            const hasHigherPriorityMatch = filenameMatch || aliasMatch || titleMatch;
+            
+            if (!hasHigherPriorityMatch) {
+                const link = `${item.path}#${headingMatch.value}`;
+                this.app.workspace.openLinkText(link, '', newTab ?? false);
+                return;
+            }
         }
         // 处理 WebViewer URL
         if (selectedItem.item.isWebUrl) {
@@ -254,18 +265,27 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                 : getParentFolderFromPath(suggestion.item.path);
         }
 
-        // Check if the match is from a heading
-        // 渲染结果
-        if (this.plugin.settings.searchHeadings && suggestion.matches) {
+        // Check if the match is from a heading and should jump to it
+        // 渲染结果：只有在实际会跳转到标题时才显示标题匹配
+        if (this.plugin.settings.searchHeadings && this.plugin.settings.autoJumpToHeading && suggestion.matches) {
             const headingMatch = suggestion.matches.find(match => match.key === 'headings');
             if (headingMatch && typeof headingMatch.value === 'string') {
-                matchedHeading = headingMatch.value;
-                nameToDisplay = suggestion.item.basename;
-                return {
-                    nameToDisplay: nameToDisplay,
-                    filePath: filePath,
-                    matchedHeading: matchedHeading
-                };
+                // 检查是否有文件名或别名匹配（与 useSelectedItem 逻辑保持一致）
+                const filenameMatch = suggestion.matches.find(match => match.key === 'basename');
+                const aliasMatch = suggestion.matches.find(match => match.key === 'aliases');
+                const titleMatch = suggestion.matches.find(match => match.key === 'title');
+                const hasHigherPriorityMatch = filenameMatch || aliasMatch || titleMatch;
+                
+                // 只有在没有高优先级匹配时才显示标题（表示会跳转到标题）
+                if (!hasHigherPriorityMatch) {
+                    matchedHeading = headingMatch.value;
+                    nameToDisplay = suggestion.item.basename;
+                    return {
+                        nameToDisplay: nameToDisplay,
+                        filePath: filePath,
+                        matchedHeading: matchedHeading
+                    };
+                }
             }
         }
 

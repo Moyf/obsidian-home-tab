@@ -92,13 +92,20 @@ export default class OmnisearchSuggester extends TextInputSuggester<ResultNoteAp
     }
 
     useSelectedItem(selectedItem: ResultNoteApi, newTab?: boolean): void {
-        // 标题跳转
+        // 标题跳转逻辑优化：只有在标题匹配度比文件名匹配度更高时才跳转
         const pluginSettings = this.plugin.settings;
         const headingMatch = selectedItem.matches?.find(match => match.match && selectedItem.path && match.match && match.match !== selectedItem.basename && match.offset > 0);
+        
         if (pluginSettings.autoJumpToHeading && headingMatch && headingMatch.match) {
-            const link = `${selectedItem.path}#${headingMatch.match}`;
-            this.app.workspace.openLinkText(link, '', newTab ?? false);
-            return;
+            // 检查是否有文件名的直接匹配 (offset === 0 表示匹配文件名或开头)
+            const filenameMatch = selectedItem.matches?.find(match => match.offset === 0 || match.match === selectedItem.basename);
+            
+            // 如果有文件名的直接匹配，优先打开文件而不是跳转标题
+            if (!filenameMatch) {
+                const link = `${selectedItem.path}#${headingMatch.match}`;
+                this.app.workspace.openLinkText(link, '', newTab ?? false);
+                return;
+            }
         }
         const file = this.app.vault.getAbstractFileByPath(selectedItem.path)
         if(file && file instanceof TFile){

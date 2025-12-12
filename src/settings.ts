@@ -185,7 +185,7 @@ export class HomeTabSettingTab extends PluginSettingTab{
             if(this.plugin.settings.searchHeadings){
                 new Setting(containerEl)
                     .setName('Jump to Heading')
-                    .setDesc('When search results match headings, clicking will automatically jump to the corresponding heading.')
+                    .setDesc('When search results match headings, clicking will automatically jump to the corresponding heading. Priority is given to file name/alias matches over heading matches.')
                     .addToggle(toggle => toggle
                         .setValue(this.plugin.settings.autoJumpToHeading ?? true)
                         .onChange(value => {this.plugin.settings.autoJumpToHeading = value; this.plugin.saveSettings();}))

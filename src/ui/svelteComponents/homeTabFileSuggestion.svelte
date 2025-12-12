@@ -38,8 +38,8 @@
                     <span>{suggestionItem.basename}</span>
                 </div>
             {/if}
-            <!-- If the match is from a heading -->
-            {#if matchedHeading && !(suggestion.matches && suggestion.matches.some(m => m.key === 'basename' || m.key === 'aliases'))}
+            <!-- If the match is from a heading and will jump to it -->
+            {#if matchedHeading && !(suggestion.matches && suggestion.matches.some(m => m.key === 'basename' || m.key === 'aliases' || m.key === 'title'))}
                 <div class="home-tab-suggestion-description">
                     <Hash size={15} aria-label={'Heading'}/>
                     <span>{matchedHeading}</span>
