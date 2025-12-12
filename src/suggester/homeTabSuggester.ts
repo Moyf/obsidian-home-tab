@@ -254,6 +254,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         if (analysis.shouldJumpToHeading && analysis.matchedHeading) {
             const link = `${item.path}#${analysis.matchedHeading}`;
             this.app.workspace.openLinkText(link, '', newTab ?? false);
+            this.close(); // 清理键盘事件监听器
             return;
         }
         // 处理 WebViewer URL
@@ -269,15 +270,24 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                     url: selectedItem.item.url
                 }
             });
+            this.close(); // 清理键盘事件监听器
             return;
         }
 
         // 处理普通文件
         if(selectedItem.item.isCreated && selectedItem.item.file){
             this.openFile(selectedItem.item.file, newTab);
+            // 清理键盘事件监听器
+            this.close();
         }
         else{
-            this.handleFileCreation(selectedItem.item, newTab);
+            // 对于异步文件创建，在完成后再清理
+            this.handleFileCreation(selectedItem.item, newTab).then(() => {
+                this.close();
+            }).catch((error) => {
+                console.error('Error creating file:', error);
+                this.close(); // 即使出错也要清理
+            });
         }
     }
 
