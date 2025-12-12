@@ -53,116 +53,33 @@ class fuzzySearch<T>{
 
 		let allScores: string[] = [];
 
-        // 自定义排序：aliases > basename > title，且匹配位置越靠前越优先
+        // 优化排序：首先按 Fuse.js 分数排序，然后考虑完全匹配优化
         results.sort((a, b): number => {
-            // 默认按分数
-            // return (a.score ?? 0) - (b.score ?? 0);
-
-			// 匹配数量（以0.3为准，3个为1分）
-			const matchedCountWeight = 0.3;
-            const getMatchedCount = (item: Fuse.FuseResult<any>): number => {
-                if (!item.matches || item.matches.length === 0) return 0;
-                return item.matches.length * matchedCountWeight;
-            };
-
-			const aMatchedCount = getMatchedCount(a);
-			const bMatchedCount = getMatchedCount(b);
-
-            // 匹配比例（完全匹配优先，其次前缀匹配，再其次包含匹配）
-			// 权重：3
-			const matchedRatioWeight = 3;
-            const getBestRatio = (item: Fuse.FuseResult<any>): number => {
-                if (!item.matches || item.matches.length === 0) return 0;
-                // 取所有字段的最佳比例
-                let best = 0;
-                for (const m of item.matches) {
-                    if (typeof m.value === 'string' && m.indices.length > 0) {
-                        for (const [start, end] of m.indices) {
-                            const matchLen = end - start + 1;
-                            const totalLen = m.value.length;
-
-							const matchedRatio = matchLen / totalLen;
-							return matchedRatio * matchedRatioWeight;
-							/*
-                            // 完全匹配
-                            if (matchLen === totalLen && start === 0) return matchedRatioWeight;
-                            // 前缀匹配
-                            if (start === 0) best = Math.max(best, matchedRatioWeight - 1);
-                            // 只要包含
-                            best = Math.max(best, matchedRatioWeight - 2);
-                            */
-                        }
-                    }
-                }
-                return best;
-            };
-
-            const aRatio = getBestRatio(a);
-            const bRatio = getBestRatio(b);
+            const aScore = a.score ?? 1;
+            const bScore = b.score ?? 1;
             
-            // if (aRatio !== bRatio) return bRatio - aRatio; // 比例高的排前面
-
-            // 字段优先级（越小越低！）
-            const getFieldPriority = (matches: readonly Fuse.FuseResultMatch[] | undefined): {priority: number, source: string, value: string} => {
-                if (!matches) return {priority: 3, source: '', value: ''};
-                
-                if (matches.some(m => m.key === 'aliases')) return {priority: 3, source: 'aliases', value: matches.find(m => m.key === 'aliases')?.value ?? ''};
-                if (matches.some(m => m.key === 'basename')) return {priority: 3, source: 'basename', value: matches.find(m => m.key === 'basename')?.value ?? ''};
-                if (matches.some(m => m.key === 'headings')) return {priority: 2, source: 'headings', value: matches.find(m => m.key === 'headings')?.value ?? ''};
-                if (matches.some(m => m.key === 'title')) return {priority: 4, source: 'title', value: matches.find(m => m.key === 'title')?.value ?? ''};
-                
-                return {priority: 3, source: '', value: ''};
+            // 主要按 Fuse.js 分数排序（分数越小越好）
+            const scoreDiff = aScore - bScore;
+            
+            // 大幅降低阈值，只有在分数真正相等时才使用优先级辅助
+            if (Math.abs(scoreDiff) > 1e-50) {
+                return scoreDiff;
+            }
+            
+            // 分数完全相等时，使用字段优先级辅助
+            const getFieldPriority = (matches: readonly Fuse.FuseResultMatch[] | undefined): number => {
+                if (!matches) return 999;
+                if (matches.some(m => m.key === 'basename')) return 10;  // 文件名最高优先级
+                if (matches.some(m => m.key === 'aliases')) return 5;   // 别名最高！
+                if (matches.some(m => m.key === 'title')) return 30;     // 标题第三
+                if (matches.some(m => m.key === 'headings')) return 40;  // 标题内容最低
+                return 999;
             };
-
-            const aPriorityData = getFieldPriority(a.matches);
-            const bPriorityData = getFieldPriority(b.matches);
-            const aPriority = aPriorityData.priority;
-            const bPriority = bPriorityData.priority;
-
-			// 接下来以对应的 Data 为准，进行后面的计分（从结果中获取 priorityData 对应的那个字段）
-			const aBaseText = aPriorityData.value;
-			const bBaseText = bPriorityData.value;
-
-            // 匹配位置优先
-            // 匹配位置权重计算（越前面的权重越高，总分值2）
-			const indexWeight = 2;
-			const getMinIndex = (matches: readonly Fuse.FuseResultMatch[] | undefined): number => {
-                if (!matches) return 0;
-                let maxScore = 0;
-                for (const m of matches) {
-                    if (Array.isArray(m.indices) && m.indices.length > 0) {
-                        const text = m.value as string;
-                        const position = m.indices[0][0];
-                        // 计算位置比例权重：(1 - position/length) * 3
-                        const score = (1 - position / text.length) * indexWeight;
-                        maxScore = Math.max(maxScore, score);
-                    }
-                }
-                return maxScore;
-            };
-
-            const aIndex = getMinIndex(a.matches);
-            const bIndex = getMinIndex(b.matches);
-
-			const aFinalScore = aIndex + aPriority + aRatio + aMatchedCount;
-			const bFinalScore = bIndex + bPriority + bRatio + bMatchedCount;
-
-			// 查看计分结果和权重值
-			// const aName = (a.item as { basename?: string }).basename??"null";
-			// const bName = (b.item as { basename?: string }).basename??"null";
-			// if (!allScores.includes(aName)){
-			// 	allScores.push(aName);
-			// 	console.log(`${aName} 总分：${aFinalScore} \n位置得分：${aIndex} | 匹配来源：${aPriorityData.source} 对应优先级分：${aPriority} | 比例得分：${aRatio}（占比${aRatio/matchedRatioWeight}） | 匹配数量得分：${aMatchedCount}`)
-			// }
-			// if (!allScores.includes(bName)){
-			// 	allScores.push(bName);
-			// 	console.log(`${bName} 总分：${bFinalScore} \n位置得分：${bIndex} | 匹配来源：${bPriorityData.source} 对应优先级分：${bPriority} | 比例得分：${bRatio}（占比${bRatio/matchedRatioWeight}） | 匹配数量得分：${bMatchedCount}`)
-			// }
-			
-			return bFinalScore - aFinalScore;
-
-            // if (aIndex !== bIndex) return aIndex - bIndex;
-
+            
+            const aPriority = getFieldPriority(a.matches);
+            const bPriority = getFieldPriority(b.matches);
+            
+            return aPriority - bPriority;
         });
 
         return results;

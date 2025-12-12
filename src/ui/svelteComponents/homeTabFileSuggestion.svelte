@@ -13,6 +13,8 @@
     export let nameToDisplay: string
     export let filePath: string | undefined = undefined
     export let matchedHeading: string | undefined = undefined
+    export let matchedAlias: string | undefined = undefined
+    export let matchedTitle: string | undefined = undefined
 
     let suggestionItem = suggestion.item
 </script>
@@ -31,18 +33,32 @@
     <!-- File details -->
     <svelte:fragment slot="suggestion-extra-content">
         {#if suggestionItem.isCreated}
-            <!-- If the suggestion name is an alias display the actual filename under it -->
-            {#if suggestionItem.aliases && suggestionItem.aliases?.includes(nameToDisplay)}
+            <!-- If the match is from an alias, show the actual filename -->
+            {#if matchedAlias}
                 <div class="home-tab-suggestion-description">
-                    <Forward size={15} aria-label={'Alias of'}/>
-                    <span>{suggestionItem.basename}</span>
+                    <Forward size={15} aria-label={'Matched alias'}/>
+                    <span>Alias of {suggestionItem.basename}</span>
+                </div>
+            {/if}
+            <!-- If the match is from a title, show that it's a title match -->
+            {#if matchedTitle}
+                <div class="home-tab-suggestion-description">
+                    <Hash size={15} aria-label={'Document title'}/>
+                    <span>Title: {matchedTitle}</span>
                 </div>
             {/if}
             <!-- If the match is from a heading and will jump to it -->
-            {#if matchedHeading && !(suggestion.matches && suggestion.matches.some(m => m.key === 'basename' || m.key === 'aliases' || m.key === 'title'))}
+            {#if matchedHeading}
                 <div class="home-tab-suggestion-description">
                     <Hash size={15} aria-label={'Heading'}/>
                     <span>{matchedHeading}</span>
+                </div>
+            {/if}
+            <!-- Fallback: If the suggestion name is an alias but not matched as alias -->
+            {#if !matchedAlias && !matchedTitle && !matchedHeading && suggestionItem.aliases && suggestionItem.aliases?.includes(nameToDisplay)}
+                <div class="home-tab-suggestion-description">
+                    <Forward size={15} aria-label={'Alias of'}/>
+                    <span>{suggestionItem.basename}</span>
                 </div>
             {/if}
         {/if}

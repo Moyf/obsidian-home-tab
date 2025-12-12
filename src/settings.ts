@@ -51,6 +51,7 @@ export interface HomeTabSettings extends ObjectKeys{
     searchTitle: boolean
     searchHeadings: boolean // 是否启用标题（heading）搜索
     autoJumpToHeading?: boolean // 新增：标题匹配时自动跳转到 heading
+    headingJumpStrategy?: 'never' | 'always' | 'smart' // 新增：标题跳转策略
     recentFilesStore: recentFileStore[]
     bookmarkedFileStore: bookmarkedFileStore[]
     searchDelay: number
@@ -59,6 +60,7 @@ export interface HomeTabSettings extends ObjectKeys{
     closePreviousSessionTabs: boolean
     omnisearch: boolean
     showOmnisearchExcerpt: boolean
+    debugMode?: boolean // 新增：调试模式，显示搜索和匹配的详细信息
 }
 
 export const DEFAULT_SETTINGS: HomeTabSettings = {
@@ -88,6 +90,7 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     searchTitle: false,
     searchHeadings: true,
     autoJumpToHeading: true, // 新增：标题匹配时自动跳转到 heading，默认开启
+    headingJumpStrategy: 'smart', // 新增：默认使用智能跳转策略
     recentFilesStore: [],
     bookmarkedFileStore: [],
     searchDelay: 0,
@@ -96,6 +99,7 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     closePreviousSessionTabs: false,
     omnisearch: false,
     showOmnisearchExcerpt: true,
+    debugMode: false, // 新增：默认关闭调试模式
 }
 
 
@@ -185,10 +189,22 @@ export class HomeTabSettingTab extends PluginSettingTab{
             if(this.plugin.settings.searchHeadings){
                 new Setting(containerEl)
                     .setName('Jump to Heading')
-                    .setDesc('When search results match headings, clicking will automatically jump to the corresponding heading. Priority is given to file name/alias matches over heading matches.')
+                    .setDesc('When search results match headings, clicking will automatically jump to the corresponding heading.')
                     .addToggle(toggle => toggle
                         .setValue(this.plugin.settings.autoJumpToHeading ?? true)
-                        .onChange(value => {this.plugin.settings.autoJumpToHeading = value; this.plugin.saveSettings();}))
+                        .onChange(value => {this.plugin.settings.autoJumpToHeading = value; this.plugin.saveSettings(); this.display();}))
+
+                if(this.plugin.settings.autoJumpToHeading){
+                    new Setting(containerEl)
+                        .setName('Heading Jump Strategy')
+                        .setDesc('Smart: Only jump when heading match is more relevant than file name. Always: Jump whenever a heading matches. Never: Never jump to headings.')
+                        .addDropdown(dropdown => dropdown
+                            .addOption('smart', 'Smart (Recommended)')
+                            .addOption('always', 'Always Jump')
+                            .addOption('never', 'Never Jump')
+                            .setValue(this.plugin.settings.headingJumpStrategy ?? 'smart')
+                            .onChange(value => {this.plugin.settings.headingJumpStrategy = value as 'never' | 'always' | 'smart'; this.plugin.saveSettings();}))
+                }
             }
             
             new Setting(containerEl)
@@ -552,6 +568,19 @@ export class HomeTabSettingTab extends PluginSettingTab{
             .setValue(this.plugin.settings.selectionHighlight)
             .onChange((value: ColorChoices) => {this.plugin.settings.selectionHighlight = value; this.plugin.saveSettings(); this.plugin.refreshOpenViews()}))
         .then((settingEl) => this.addResetButton(settingEl, 'selectionHighlight'))
+
+        containerEl.createEl('h2', {text: 'Developer'});
+        
+        new Setting(containerEl)
+            .setName('Debug Mode')
+            .setDesc('Enable debug logging for search results and match analysis. Check the developer console for detailed information.')
+            .addToggle((toggle) => toggle
+                .setValue(this.plugin.settings.debugMode ?? false)
+                .onChange((value) => {
+                    this.plugin.settings.debugMode = value
+                    this.plugin.saveSettings()
+                })
+            )
     }
 
     addResetButton(settingElement: Setting, settingKey: string, refreshView: boolean = true){

@@ -10,6 +10,7 @@ import { isValidExtension, type FileExtension, type FileType } from 'src/utils/g
 import { get } from 'svelte/store'
 import HomeTabFileSuggestion from 'src/ui/svelteComponents/homeTabFileSuggestion.svelte'
 import { isValidUrl } from 'src/utils/urlUtils'
+import { MatchAnalyzer } from 'src/utils/matchAnalyzer'
 
 declare module 'obsidian'{
     interface MetadataCache{
@@ -26,6 +27,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
     private searchBar: HomeTabSearchBar
 
     private activeFilter: FileType | FileExtension  | null
+    private matchAnalyzer: MatchAnalyzer
 
     constructor(app: App, plugin: HomeTab, view: View, searchBar: HomeTabSearchBar) {
         super(app, get(searchBar.searchBarEl), get(searchBar.suggestionContainerEl), {
@@ -43,6 +45,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         this.plugin = plugin
         this.view = view
         this.searchBar = searchBar
+        this.matchAnalyzer = new MatchAnalyzer(plugin.settings)
 
         this.app.metadataCache.onCleanCache(() => {
             if (this.plugin.settings.markdownOnly) {
@@ -66,12 +69,14 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
             this.fuzzySearch = new FileFuzzySearch(this.files, { 
                 ...DEFAULT_FUSE_OPTIONS, 
                 ignoreLocation: true, 
-                fieldNormWeight: 1.65, 
+                // 平衡多重匹配和字段优先级：适中的字段标准化权重
+                fieldNormWeight: 1.0,  // 平衡值：既不过度惩罚多重匹配，也保持字段间的区别
+                // 明确的字段优先级权重：文件名 > 别名 > 标题 > 标题内容
                 keys: [
-                    {name: 'basename', weight: 1.5}, 
-                    {name: 'aliases', weight: 1},
-                    ...(this.plugin.settings.searchTitle ? [{name: 'title', weight: 1.2}] : []),
-                    ...(this.plugin.settings.searchHeadings ? [{name: 'headings', weight: 0.6}] : [])
+                    {name: 'basename', weight: 2.0},    // 文件名最高权重
+                    {name: 'aliases', weight: 1.8},     // 别名次之
+                    ...(this.plugin.settings.searchTitle ? [{name: 'title', weight: 1.5}] : []),    // 标题第三
+                    ...(this.plugin.settings.searchHeadings ? [{name: 'headings', weight: 0.8}] : [])  // 标题内容权重最低
                 ] 
             })
         })
@@ -189,29 +194,52 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
 
         // 先尝试搜索文件
         if(!query) return []
-        return this.fuzzySearch.rawSearch(query, this.plugin.settings.maxResults);
+        const results = this.fuzzySearch.rawSearch(query, this.plugin.settings.maxResults);
+        
+        // Debug 模式下清空控制台并输出搜索结果
+        if (this.plugin.settings.debugMode) {
+            console.clear();
+            console.log('[HomeTabSuggester] Search Results for query:', query);
+            console.log('Total results:', results.length);
+            results.forEach((result, index) => {
+                console.log(`Result ${index + 1}:`, {
+                    file: result.item.basename,
+                    path: result.item.path,
+                    score: result.score,
+                    matches: result.matches?.map(m => ({
+                        key: m.key,
+                        value: m.value,
+                        indices: m.indices
+                    }))
+                });
+            });
+            console.log('===================\n');
+        }
+        
+        return results;
     }
 
     useSelectedItem(selectedItem: Fuse.FuseResult<SearchFile>, newTab?: boolean): void {
-        // 标题跳转逻辑优化：只有在标题匹配度比文件名/别名匹配度更高时才跳转
+        // 使用智能匹配分析器分析匹配意图
+        const query = this.inputEl.value.trim();
+        const analysis = this.matchAnalyzer.analyzeMatch(selectedItem, query);
         const item = selectedItem.item;
-        const pluginSettings = this.plugin.settings;
-        const headingMatch = selectedItem.matches?.find(match => match.key === 'headings');
         
-        if (pluginSettings.autoJumpToHeading && headingMatch && headingMatch.value) {
-            // 检查是否有文件名或别名匹配
-            const filenameMatch = selectedItem.matches?.find(match => match.key === 'basename');
-            const aliasMatch = selectedItem.matches?.find(match => match.key === 'aliases');
-            const titleMatch = selectedItem.matches?.find(match => match.key === 'title');
-            
-            // 如果有文件名、别名或标题的直接匹配，优先打开文件而不是跳转标题
-            const hasHigherPriorityMatch = filenameMatch || aliasMatch || titleMatch;
-            
-            if (!hasHigherPriorityMatch) {
-                const link = `${item.path}#${headingMatch.value}`;
-                this.app.workspace.openLinkText(link, '', newTab ?? false);
-                return;
-            }
+        if (this.plugin.settings.debugMode) {
+            console.log('[HomeTabSuggester] Selected item action:', {
+                file: item.basename,
+                query: query,
+                action: analysis.shouldJumpToHeading ? 'Jump to heading' : 'Open file',
+                heading: analysis.matchedHeading,
+                newTab: newTab
+            });
+        }
+        
+        // 根据分析结果决定跳转行为
+        if (analysis.shouldJumpToHeading && analysis.matchedHeading) {
+            const link = `${item.path}#${analysis.matchedHeading}`;
+            this.app.workspace.openLinkText(link, '', newTab ?? false);
+            return;
         }
         // 处理 WebViewer URL
         if (selectedItem.item.isWebUrl) {
@@ -238,7 +266,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         }
     }
 
-    getDisplayElementProps(suggestion: Fuse.FuseResult<SearchFile>): {nameToDisplay: string, filePath?: string, matchedHeading?: string}{
+    getDisplayElementProps(suggestion: Fuse.FuseResult<SearchFile>): {nameToDisplay: string, filePath?: string, matchedHeading?: string, matchedAlias?: string, matchedTitle?: string}{
         if (!this.inputEl || !(this.inputEl instanceof HTMLInputElement)) {
             return {
                 nameToDisplay: suggestion.item.basename,
@@ -258,6 +286,8 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         let nameToDisplay = suggestion.item.basename;
         let filePath: string | undefined = undefined;
         let matchedHeading: string | undefined = undefined;
+        let matchedAlias: string | undefined = undefined;
+        let matchedTitle: string | undefined = undefined;
 
         if(this.plugin.settings.showPath){
             filePath = suggestion.item.file && suggestion.item.file.parent 
@@ -265,28 +295,32 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                 : getParentFolderFromPath(suggestion.item.path);
         }
 
-        // Check if the match is from a heading and should jump to it
-        // 渲染结果：只有在实际会跳转到标题时才显示标题匹配
-        if (this.plugin.settings.searchHeadings && this.plugin.settings.autoJumpToHeading && suggestion.matches) {
-            const headingMatch = suggestion.matches.find(match => match.key === 'headings');
-            if (headingMatch && typeof headingMatch.value === 'string') {
-                // 检查是否有文件名或别名匹配（与 useSelectedItem 逻辑保持一致）
-                const filenameMatch = suggestion.matches.find(match => match.key === 'basename');
-                const aliasMatch = suggestion.matches.find(match => match.key === 'aliases');
-                const titleMatch = suggestion.matches.find(match => match.key === 'title');
-                const hasHigherPriorityMatch = filenameMatch || aliasMatch || titleMatch;
-                
-                // 只有在没有高优先级匹配时才显示标题（表示会跳转到标题）
-                if (!hasHigherPriorityMatch) {
-                    matchedHeading = headingMatch.value;
-                    nameToDisplay = suggestion.item.basename;
-                    return {
-                        nameToDisplay: nameToDisplay,
-                        filePath: filePath,
-                        matchedHeading: matchedHeading
-                    };
-                }
+        // 使用智能匹配分析器分析匹配意图
+        if (suggestion.matches) {
+            const query = this.inputEl.value.trim();
+            const analysis = this.matchAnalyzer.analyzeMatch(suggestion, query);
+            
+            // 根据分析结果设置显示信息
+            if (analysis.displayInfo.showHeading && analysis.matchedHeading) {
+                matchedHeading = analysis.matchedHeading;
+                nameToDisplay = suggestion.item.basename;
+            } else if (analysis.displayInfo.showAlias && analysis.displayInfo.matchedAlias) {
+                matchedAlias = analysis.displayInfo.matchedAlias;
+                nameToDisplay = analysis.displayInfo.matchedAlias;
+            } else if (analysis.displayInfo.showTitle && analysis.displayInfo.matchedTitle) {
+                matchedTitle = analysis.displayInfo.matchedTitle;
+                nameToDisplay = analysis.displayInfo.matchedTitle;
+            } else {
+                nameToDisplay = this.fuzzySearch.getBestMatch(suggestion, this.inputEl.value);
             }
+            
+            return {
+                nameToDisplay: nameToDisplay,
+                filePath: filePath,
+                matchedHeading: matchedHeading,
+                matchedAlias: matchedAlias,
+                matchedTitle: matchedTitle
+            };
         }
 
         nameToDisplay = this.fuzzySearch.getBestMatch(suggestion, this.inputEl.value);
@@ -294,7 +328,9 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         return {
             nameToDisplay: nameToDisplay,
             filePath: filePath,
-            matchedHeading: matchedHeading
+            matchedHeading: matchedHeading,
+            matchedAlias: matchedAlias,
+            matchedTitle: matchedTitle
         };
     }
 
