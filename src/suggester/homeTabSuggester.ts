@@ -69,14 +69,14 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
             this.fuzzySearch = new FileFuzzySearch(this.files, { 
                 ...DEFAULT_FUSE_OPTIONS, 
                 ignoreLocation: true, 
-                // 平衡多重匹配和字段优先级：适中的字段标准化权重
-                fieldNormWeight: 1.0,  // 平衡值：既不过度惩罚多重匹配，也保持字段间的区别
-                // 明确的字段优先级权重：文件名 > 别名 > 标题 > 标题内容
+                // 完全禁用字段标准化权重，让单一最佳匹配主导
+                fieldNormWeight: 0.5,  // 完全消除多字段匹配的累积效应
+                // 超极化权重：basename 绝对优先
                 keys: [
-                    {name: 'basename', weight: 2.0},    // 文件名最高权重
-                    {name: 'aliases', weight: 1.8},     // 别名次之
-                    ...(this.plugin.settings.searchTitle ? [{name: 'title', weight: 1.5}] : []),    // 标题第三
-                    ...(this.plugin.settings.searchHeadings ? [{name: 'headings', weight: 0.8}] : [])  // 标题内容权重最低
+                    {name: 'basename', weight: 10.0},  // 文件名绝对权重
+                    {name: 'aliases', weight: 8.0},    // 别名高权重  
+                    ...(this.plugin.settings.searchTitle ? [{name: 'title', weight: 2.5}] : []),   // 标题中等权重
+                    ...(this.plugin.settings.searchHeadings ? [{name: 'headings', weight: 1.0}] : [])  // 标题内容极低权重
                 ] 
             })
         })
@@ -194,26 +194,25 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
 
         // 先尝试搜索文件
         if(!query) return []
+        
+        // 重置分析器状态
+        this.matchAnalyzer.resetForNewSearch();
+        
         const results = this.fuzzySearch.rawSearch(query, this.plugin.settings.maxResults);
         
-        // Debug 模式下清空控制台并输出搜索结果
+        // Debug 模式下输出单行格式的搜索结果汇总
         if (this.plugin.settings.debugMode) {
             console.clear();
-            console.log('[HomeTabSuggester] Search Results for query:', query);
-            console.log('Total results:', results.length);
-            results.forEach((result, index) => {
-                console.log(`Result ${index + 1}:`, {
-                    file: result.item.basename,
-                    path: result.item.path,
-                    score: result.score,
-                    matches: result.matches?.map(m => ({
-                        key: m.key,
-                        value: m.value,
-                        indices: m.indices
-                    }))
-                });
-            });
-            console.log('===================\n');
+            console.log(`🔍 SEARCH: "${query}" | Results: ${results.length}`);
+            
+            // 生成单行汇总
+            const summary = results.map((result, index) => {
+                const matches = result.matches?.map(m => `${m.key}="${m.value}"`).join(',') || 'no-matches';
+                return `#${index+1}: "${result.item.basename}" | score=${result.score?.toExponential(2)} | matches=[${matches}]`;
+            }).join('\n');
+            
+            console.log(summary);
+            console.log('===================');
         }
         
         return results;
@@ -300,18 +299,36 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
             const query = this.inputEl.value.trim();
             const analysis = this.matchAnalyzer.analyzeMatch(suggestion, query);
             
+            // Debug: 输出最终显示属性
+            if (this.plugin.settings.debugMode) {
+                const finalDisplay = `📋 DISPLAY: "${suggestion.item.basename}" → name="${analysis.displayInfo.showAlias ? analysis.displayInfo.matchedAlias : analysis.displayInfo.showTitle ? analysis.displayInfo.matchedTitle : suggestion.item.basename}" | showAlias=${analysis.displayInfo.showAlias} | showTitle=${analysis.displayInfo.showTitle} | showHeading=${analysis.displayInfo.showHeading}`
+                console.log(finalDisplay);
+            }
+            
             // 根据分析结果设置显示信息
             if (analysis.displayInfo.showHeading && analysis.matchedHeading) {
                 matchedHeading = analysis.matchedHeading;
                 nameToDisplay = suggestion.item.basename;
+                if (this.plugin.settings.debugMode) {
+                    console.log(`📝 SET HEADING: nameToDisplay="${nameToDisplay}" | matchedHeading="${matchedHeading}"`);
+                }
             } else if (analysis.displayInfo.showAlias && analysis.displayInfo.matchedAlias) {
                 matchedAlias = analysis.displayInfo.matchedAlias;
                 nameToDisplay = analysis.displayInfo.matchedAlias;
+                if (this.plugin.settings.debugMode) {
+                    console.log(`📝 SET ALIAS: nameToDisplay="${nameToDisplay}" | matchedAlias="${matchedAlias}"`);
+                }
             } else if (analysis.displayInfo.showTitle && analysis.displayInfo.matchedTitle) {
                 matchedTitle = analysis.displayInfo.matchedTitle;
                 nameToDisplay = analysis.displayInfo.matchedTitle;
+                if (this.plugin.settings.debugMode) {
+                    console.log(`📝 SET TITLE: nameToDisplay="${nameToDisplay}" | matchedTitle="${matchedTitle}"`);
+                }
             } else {
                 nameToDisplay = this.fuzzySearch.getBestMatch(suggestion, this.inputEl.value);
+                if (this.plugin.settings.debugMode) {
+                    console.log(`📝 SET FALLBACK: nameToDisplay="${nameToDisplay}" | getBestMatch result`);
+                }
             }
             
             return {

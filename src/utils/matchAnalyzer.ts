@@ -28,7 +28,19 @@ export interface MatchAnalysis {
 }
 
 export class MatchAnalyzer {
+    private hasAnalyzed = false;
+    
     constructor(private settings: HomeTabSettings) {}
+    
+    /**
+     * 重置分析器状态（每次新搜索时调用）
+     */
+    resetForNewSearch() {
+        this.hasAnalyzed = false;
+        if (this.settings.debugMode) {
+            console.log('[MatchAnalyzer] 🔄 RESET for new search');
+        }
+    }
     
     private debug(...args: any[]) {
         if (this.settings.debugMode) {
@@ -46,7 +58,14 @@ export class MatchAnalyzer {
         const matches = suggestion.matches || []
         const item = suggestion.item
         
-        this.debug(`▶️ Query: "${query}" | File: ${item.basename}`)
+        // Debug: 检查是否是第一次分析
+        const isFirstAnalysis = !this.hasAnalyzed
+        if (!this.hasAnalyzed) {
+            this.hasAnalyzed = true
+            this.debug(`🚀 FIRST ANALYSIS SESSION`)
+        }
+        
+        this.debug(`🔎 ANALYZING: "${query}" → "${item.basename}" | Path: ${item.path} | First=${isFirstAnalysis}`)
         
         // 分析各种匹配类型
         const basenameMatch = matches.find(m => m.key === 'basename')
@@ -60,12 +79,10 @@ export class MatchAnalyzer {
             titleMatch && 'title',
             headingMatch && 'heading'
         ].filter(Boolean).join(', ')
-        
-        this.debug(`🎨 Matches: ${matchTypes}`)
 
         // 计算匹配质量和意图
         const analysis = this.calculateMatchIntent(
-            query, basenameMatch, aliasMatch, titleMatch, headingMatch, item
+            query, matches, basenameMatch, aliasMatch, titleMatch, headingMatch, item
         )
 
         // 决定跳转行为
@@ -82,9 +99,12 @@ export class MatchAnalyzer {
             5: 'HEADING_CONTENT'
         }[analysis.intent] || 'UNKNOWN'
         
-        const action = analysis.shouldJumpToHeading ? `🔗 Jump to: ${analysis.matchedHeading}` : '📁 Open file'
-        this.debug(`🎯 ${intentName} (${(analysis.confidence * 100).toFixed(1)}%) → ${action}\n`)
-
+        const action = analysis.shouldJumpToHeading ? `Jump→${analysis.matchedHeading}` : 'Open'
+        const displayAlias = analysis.displayInfo.showAlias ? `alias="${analysis.displayInfo.matchedAlias}"` : 'no-alias'
+        const displayTitle = analysis.displayInfo.showTitle ? `title="${analysis.displayInfo.matchedTitle}"` : 'no-title'
+        
+        this.debug(`🎯 RESULT: "${query}" → "${item.basename}" | ${matchTypes} | ${intentName}(${(analysis.confidence * 100).toFixed(1)}%) | ${action} | ${displayAlias} | ${displayTitle}`)
+        
         return analysis
     }
 
@@ -93,6 +113,7 @@ export class MatchAnalyzer {
      */
     private calculateMatchIntent(
         query: string,
+        matches: readonly Fuse.FuseResultMatch[],
         basenameMatch?: Fuse.FuseResultMatch,
         aliasMatch?: Fuse.FuseResultMatch, 
         titleMatch?: Fuse.FuseResultMatch,
@@ -106,11 +127,7 @@ export class MatchAnalyzer {
             const exactMatch = item.basename.toLowerCase() === normalizedQuery
             const confidence = this.calculateMatchConfidence(basenameMatch, normalizedQuery)
             
-            this.debug('Basename match analysis:', {
-                exactMatch,
-                confidence,
-                basename: item.basename
-            })
+            this.debug(`📁 Basename: "${item.basename}" | exact=${exactMatch} | conf=${(confidence*100).toFixed(1)}%`)
             
             if (exactMatch) {
                 return {
@@ -142,29 +159,47 @@ export class MatchAnalyzer {
             }
         }
 
-        // 检查别名匹配
-        if (aliasMatch && typeof aliasMatch.value === 'string') {
-            const exactAliasMatch = aliasMatch.value.toLowerCase() === normalizedQuery
-            const confidence = this.calculateMatchConfidence(aliasMatch, normalizedQuery)
+        // 检查别名匹配 - 找到最佳匹配的别名
+        const aliasMatches = matches.filter(m => m.key === 'aliases')
+        if (aliasMatches.length > 0) {
+            let bestAlias = null
+            let bestConfidence = 0
+            let isExactMatch = false
             
-            this.debug('Alias match analysis:', {
-                exactMatch: exactAliasMatch,
-                confidence,
-                alias: aliasMatch.value
-            })
+            // 找到置信度最高的别名匹配
+            for (const match of aliasMatches) {
+                if (match.value && typeof match.value === 'string') {
+                    const exactMatch = match.value.toLowerCase() === normalizedQuery
+                    const confidence = this.calculateMatchConfidence(match, normalizedQuery)
+                    
+                    this.debug(`🔍 Checking alias: "${match.value}" | exact=${exactMatch} | conf=${(confidence*100).toFixed(1)}%`)
+                    
+                    if (exactMatch || confidence > bestConfidence) {
+                        bestAlias = match.value
+                        bestConfidence = confidence
+                        isExactMatch = exactMatch
+                        this.debug(`✅ New best alias: "${bestAlias}" | exact=${isExactMatch} | conf=${(bestConfidence*100).toFixed(1)}%`)
+                        if (exactMatch) break; // 找到完全匹配就停止
+                    }
+                }
+            }
             
-            // 任何别名匹配都应该优先于标题匹配
-            return {
-                intent: MatchIntent.FILE_ALIAS,
-                confidence: exactAliasMatch ? 1.0 : confidence,
-                shouldJumpToHeading: false,
-                displayInfo: {
-                    showHeading: false,
-                    showAlias: true,
-                    showTitle: false,
-                    highlightType: 'alias',
-                    primaryMatch: aliasMatch.value,
-                    matchedAlias: aliasMatch.value
+            if (bestAlias) {
+                this.debug(`🏷️ Alias: "${bestAlias}" | exact=${isExactMatch} | conf=${(bestConfidence*100).toFixed(1)}%`)
+                
+                // 任何别名匹配都应该优先于标题匹配
+                return {
+                    intent: MatchIntent.FILE_ALIAS,
+                    confidence: isExactMatch ? 1.0 : bestConfidence,
+                    shouldJumpToHeading: false,
+                    displayInfo: {
+                        showHeading: false,
+                        showAlias: true,
+                        showTitle: false,
+                        highlightType: 'alias',
+                        primaryMatch: bestAlias,
+                        matchedAlias: bestAlias
+                    }
                 }
             }
         }
@@ -369,7 +404,6 @@ export class MatchAnalyzer {
     ): MatchAnalysis['displayInfo'] {
         // 如果会跳转到标题，显示标题信息
         if (analysis.shouldJumpToHeading && analysis.matchedHeading) {
-
             return {
                 showHeading: true,
                 showAlias: false,
@@ -377,6 +411,11 @@ export class MatchAnalyzer {
                 highlightType: 'heading',
                 primaryMatch: analysis.matchedHeading
             }
+        }
+        
+        // 如果已经有别名或标题的显示信息，保持不变
+        if (analysis.displayInfo.showAlias || analysis.displayInfo.showTitle) {
+            return analysis.displayInfo;
         }
         
         // 否则显示文件信息

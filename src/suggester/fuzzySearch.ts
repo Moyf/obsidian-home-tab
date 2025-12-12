@@ -47,39 +47,98 @@ class fuzzySearch<T>{
     }
 
     rawSearch(query: string, limit?: number): Fuse.FuseResult<T>[]{
-        // return this.fuse.search(query, limit ? {limit: limit} : undefined);
-
         const results = this.fuse.search(query, limit ? { limit } : undefined);
 
-		let allScores: string[] = [];
-
-        // 优化排序：首先按 Fuse.js 分数排序，然后考虑完全匹配优化
+        // 智能排序：优先考虑完全匹配和高质量匹配
         results.sort((a, b): number => {
             const aScore = a.score ?? 1;
             const bScore = b.score ?? 1;
             
-            // 主要按 Fuse.js 分数排序（分数越小越好）
-            const scoreDiff = aScore - bScore;
-            
-            // 大幅降低阈值，只有在分数真正相等时才使用优先级辅助
-            if (Math.abs(scoreDiff) > 1e-50) {
-                return scoreDiff;
-            }
-            
-            // 分数完全相等时，使用字段优先级辅助
-            const getFieldPriority = (matches: readonly Fuse.FuseResultMatch[] | undefined): number => {
-                if (!matches) return 999;
-                if (matches.some(m => m.key === 'basename')) return 10;  // 文件名最高优先级
-                if (matches.some(m => m.key === 'aliases')) return 5;   // 别名最高！
-                if (matches.some(m => m.key === 'title')) return 30;     // 标题第三
-                if (matches.some(m => m.key === 'headings')) return 40;  // 标题内容最低
-                return 999;
+            // 基于匹配占比的质量评估（占比比位置更重要）
+            const getMatchQuality = (result: typeof a) => {
+                if (!result.matches || !result.item) return { ratio: 0, priority: 999, isExact: false };
+                
+                const queryLower = query.toLowerCase();
+                let bestRatio = 0;
+                let bestPriority = 999;
+                let isExact = false;
+                
+                // 检查 basename 匹配
+                const basenameMatch = result.matches.find(m => m.key === 'basename');
+                if (basenameMatch && basenameMatch.value) {
+                    const basename = basenameMatch.value.toString().toLowerCase();
+                    
+                    // 完全匹配
+                    if (basename === queryLower) {
+                        return { ratio: 1.0, priority: 1, isExact: true };
+                    }
+                    
+                    // 计算匹配占比（不考虑位置，只看占比）
+                    const ratio = queryLower.length / basename.length;
+                    if (ratio > bestRatio) {
+                        bestRatio = ratio;
+                        bestPriority = 10; // basename 基础优先级
+                    }
+                }
+                
+                // 检查所有别名匹配（基于占比）
+                const aliasMatches = result.matches.filter(m => m.key === 'aliases');
+                for (const aliasMatch of aliasMatches) {
+                    if (aliasMatch.value) {
+                        const alias = aliasMatch.value.toString().toLowerCase();
+                        
+                        // 完全匹配
+                        if (alias === queryLower) {
+                            return { ratio: 1.0, priority: 1, isExact: true }; // 完全匹配最高优先级
+                        }
+                        
+                        // 计算别名匹配占比
+                        const ratio = queryLower.length / alias.length;
+                        if (ratio > bestRatio) {
+                            bestRatio = ratio;
+                            bestPriority = 20; // 别名优先级稍低于 basename
+                        }
+                    }
+                }
+                
+                // 检查 title 和 headings 匹配（更低优先级）
+                const titleMatch = result.matches.find(m => m.key === 'title');
+                if (titleMatch && titleMatch.value) {
+                    const title = titleMatch.value.toString().toLowerCase();
+                    if (title === queryLower) {
+                        return { ratio: 1.0, priority: 1, isExact: true };
+                    }
+                    const ratio = queryLower.length / title.length;
+                    if (ratio > bestRatio) {
+                        bestRatio = ratio;
+                        bestPriority = 30; // title 优先级更低
+                    }
+                }
+                
+                return { ratio: bestRatio, priority: bestPriority, isExact: isExact };
             };
             
-            const aPriority = getFieldPriority(a.matches);
-            const bPriority = getFieldPriority(b.matches);
+            const aQuality = getMatchQuality(a);
+            const bQuality = getMatchQuality(b);
             
-            return aPriority - bPriority;
+            // 1. 完全匹配优先
+            if (aQuality.isExact !== bQuality.isExact) {
+                return aQuality.isExact ? -1 : 1;
+            }
+            
+            // 2. 按匹配占比排序（占比越高越好）
+            const ratioDiff = bQuality.ratio - aQuality.ratio;
+            if (Math.abs(ratioDiff) > 0.01) { // 占比差异超过1%
+                return ratioDiff;
+            }
+            
+            // 3. 占比相近时，按字段类型优先级排序
+            if (aQuality.priority !== bQuality.priority) {
+                return aQuality.priority - bQuality.priority;
+            }
+            
+            // 4. 最后按Fuse.js分数排序
+            return aScore - bScore;
         });
 
         return results;
