@@ -106,7 +106,7 @@ export class HomeTabView extends FileView{
     }
 
     async onClose(): Promise<void>{
-        this.searchBar.fileSuggester.close()
+        this.searchBar.fileSuggester.destroy()  // 使用 destroy() 而不是 close()
         this.homepage.$destroy();
     }
 } 

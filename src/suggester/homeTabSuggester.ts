@@ -366,13 +366,19 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                 }
             }
             
-            return {
+            const result = {
                 nameToDisplay: nameToDisplay,
                 filePath: filePath,
                 matchedHeading: matchedHeading,
                 matchedAlias: matchedAlias,
                 matchedTitle: matchedTitle
             };
+            
+            if (this.plugin.settings.debugMode) {
+                console.log(`🎁 PROPS TO SVELTE: "${suggestion.item.basename}" →`, result);
+            }
+            
+            return result;
         }
 
         nameToDisplay = this.fuzzySearch.getBestMatch(suggestion, this.inputEl.value);

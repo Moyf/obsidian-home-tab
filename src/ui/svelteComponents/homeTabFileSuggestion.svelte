@@ -16,7 +16,9 @@
     export let matchedAlias: string | undefined = undefined
     export let matchedTitle: string | undefined = undefined
 
+    // 使用智能响应式，只在 suggestion 对象引用变化时更新，避免闪烁
     let suggestionItem = suggestion.item
+    $: if (suggestion) suggestionItem = suggestion.item
 </script>
 
 <Suggestion {index} {textInputSuggester} {selectedItemIndex}

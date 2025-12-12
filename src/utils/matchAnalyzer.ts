@@ -88,8 +88,7 @@ export class MatchAnalyzer {
         // 决定跳转行为
         analysis.shouldJumpToHeading = this.shouldJumpToHeading(analysis, query)
         
-        // 设置显示信息
-        analysis.displayInfo = this.getDisplayInfo(analysis, basenameMatch, headingMatch)
+        // displayInfo 已经在 calculateMatchIntent 中正确设置，不需要重新覆盖
 
         const intentName = {
             1: 'EXACT_FILE',
@@ -371,9 +370,10 @@ export class MatchAnalyzer {
                     const queryLength = query.length
                     let threshold: number
                     
-                    if (queryLength <= 3) {
-                        threshold = 0.05  // 短查询词 (1-3字符) 提高阈值避免过于激进
-                    } else if (queryLength <= 6) {
+                    // if (queryLength <= 3) {
+                    //     threshold = 0.05  // 短查询词 (1-3字符) 提高阈值避免过于激进
+                    // } else 
+                    if (queryLength <= 6) {
                         threshold = 0.08  // 中等查询词 (4-6字符)
                     } else {
                         threshold = 0.15  // 长查询词 (7+字符)
