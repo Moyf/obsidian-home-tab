@@ -1,4 +1,4 @@
-import { normalizePath, Platform, TAbstractFile, TFile, View, type App } from 'obsidian'
+import { normalizePath, Platform, TAbstractFile, TFile, View, debounce, type App } from 'obsidian'
 import type Fuse from 'fuse.js'
 import { DEFAULT_FUSE_OPTIONS, FileFuzzySearch, type SearchFile } from './fuzzySearch'
 import type HomeTab from '../main'
@@ -28,7 +28,6 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
 
     private activeFilter: FileType | FileExtension  | null
     private matchAnalyzer: MatchAnalyzer
-    private customBlurHandler: () => void
 
     constructor(app: App, plugin: HomeTab, view: View, searchBar: HomeTabSearchBar) {
         super(app, get(searchBar.searchBarEl), get(searchBar.suggestionContainerEl), {
@@ -47,9 +46,6 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         this.view = view
         this.searchBar = searchBar
         this.matchAnalyzer = new MatchAnalyzer(plugin.settings)
-
-        // 重写 blur 事件处理，根据设置决定是否在失焦时关闭
-        this.setupBlurBehavior()
 
         this.app.metadataCache.onCleanCache(() => {
             if (this.plugin.settings.markdownOnly) {
@@ -107,20 +103,20 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         this.view.registerEvent(this.app.metadataCache.on('resolved', () => this.updateUnresolvedFiles()))
     }
 
-    private setupBlurBehavior(): void {
-        // 移除默认的 blur 事件处理器
-        this.inputEl.removeEventListener('blur', this.close.bind(this))
-        
-        // 创建自定义的 blur 事件处理器并保存引用
-        this.customBlurHandler = () => {
-            // 检查设置，决定是否在失焦时关闭
-            if (this.plugin.settings.hideOnBlur ?? true) {
-                this.close()
+    // 重写 close 方法来检查 hideOnBlur 设置
+    close(): void {
+        // 如果是通过 blur 事件触发的 close，检查设置
+        // 通过检查当前焦点来判断是否是 blur 事件触发的
+        if (document.activeElement !== this.inputEl) {
+            // 当前元素失去焦点，检查 hideOnBlur 设置
+            if (!(this.plugin.settings.hideOnBlur ?? true)) {
+                // 如果设置为不隐藏，则不关闭
+                return;
             }
         }
         
-        // 添加自定义的 blur 事件处理器
-        this.inputEl.addEventListener('blur', this.customBlurHandler)
+        // 调用父类的 close 方法
+        super.close();
     }
 
     updateSearchBarContainerElState(isActive: boolean){
@@ -465,11 +461,6 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
     }
 
     destroy(): void {
-        // 清理自定义的 blur 事件处理器
-        if (this.customBlurHandler) {
-            this.inputEl.removeEventListener('blur', this.customBlurHandler)
-        }
-        
         // 调用父类的 destroy 方法
         super.destroy()
     }
