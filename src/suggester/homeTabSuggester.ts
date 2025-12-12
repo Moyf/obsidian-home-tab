@@ -104,7 +104,16 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
     }
 
     // 重写 close 方法来检查 hideOnBlur 设置
-    close(): void {
+    close(forceOrEvent?: boolean | Event): void {
+        // 处理参数：如果第一个参数是事件对象，则 force = false
+        const force = typeof forceOrEvent === 'boolean' ? forceOrEvent : false;
+        
+        // 如果是强制关闭（用户选择文件后），直接关闭
+        if (force) {
+            super.close();
+            return;
+        }
+        
         // 如果是通过 blur 事件触发的 close，检查设置
         // 通过检查当前焦点来判断是否是 blur 事件触发的
         if (document.activeElement !== this.inputEl) {
@@ -254,7 +263,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         if (analysis.shouldJumpToHeading && analysis.matchedHeading) {
             const link = `${item.path}#${analysis.matchedHeading}`;
             this.app.workspace.openLinkText(link, '', newTab ?? false);
-            this.close(); // 清理键盘事件监听器
+            this.close(true); // 强制清理键盘事件监听器
             return;
         }
         // 处理 WebViewer URL
@@ -270,23 +279,23 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                     url: selectedItem.item.url
                 }
             });
-            this.close(); // 清理键盘事件监听器
+            this.close(true); // 强制清理键盘事件监听器
             return;
         }
 
         // 处理普通文件
         if(selectedItem.item.isCreated && selectedItem.item.file){
             this.openFile(selectedItem.item.file, newTab);
-            // 清理键盘事件监听器
-            this.close();
+            // 强制清理键盘事件监听器
+            this.close(true);
         }
         else{
             // 对于异步文件创建，在完成后再清理
             this.handleFileCreation(selectedItem.item, newTab).then(() => {
-                this.close();
+                this.close(true);
             }).catch((error) => {
                 console.error('Error creating file:', error);
-                this.close(); // 即使出错也要清理
+                this.close(true); // 即使出错也要强制清理
             });
         }
     }
