@@ -101,6 +101,11 @@ export default class HomeTabSearchBar{
     }
 
     private createDefaultSuggester(): void {
+        // 销毁旧的 suggester 实例
+        if (this.fileSuggester) {
+            this.fileSuggester.destroy();
+        }
+        
         if (this.plugin.settings.omnisearch && this.plugin.app.plugins.getPlugin('omnisearch')) {
             this.fileSuggester = new OmnisearchSuggester(this.app, this.plugin, this.view, this);
         } else {
@@ -129,6 +134,11 @@ export default class HomeTabSearchBar{
     }
 
     private createSuggester(query: string): void {
+        // 销毁旧的 suggester 实例
+        if (this.fileSuggester) {
+            this.fileSuggester.destroy();
+        }
+        
         // 如果是 URL 且不在移动端，使用 WebViewerSuggester
         if (query && isValidUrl(query) && !Platform.isMobile) {
             this.fileSuggester = new WebViewerSuggester(this.plugin.app, this.plugin, this.view, this);

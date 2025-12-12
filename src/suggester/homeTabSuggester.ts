@@ -1,4 +1,4 @@
-import { normalizePath, Platform, TAbstractFile, TFile, View, type App } from 'obsidian'
+import { normalizePath, Platform, TAbstractFile, TFile, View, debounce, type App } from 'obsidian'
 import type Fuse from 'fuse.js'
 import { DEFAULT_FUSE_OPTIONS, FileFuzzySearch, type SearchFile } from './fuzzySearch'
 import type HomeTab from '../main'
@@ -101,6 +101,31 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         this.view.registerEvent(this.app.vault.on('delete', (file: TAbstractFile) => { if(file instanceof TFile){this.updateSearchfilesList(file)}}))
         this.view.registerEvent(this.app.vault.on('rename', (file: TAbstractFile, oldPath: string) => { if(file instanceof TFile){this.updateSearchfilesList(file, oldPath)}}))
         this.view.registerEvent(this.app.metadataCache.on('resolved', () => this.updateUnresolvedFiles()))
+    }
+
+    // 重写 close 方法来检查 hideOnBlur 设置
+    close(forceOrEvent?: boolean | Event): void {
+        // 处理参数：如果第一个参数是事件对象，则 force = false
+        const force = typeof forceOrEvent === 'boolean' ? forceOrEvent : false;
+        
+        // 如果是强制关闭（用户选择文件后），直接关闭
+        if (force) {
+            super.close();
+            return;
+        }
+        
+        // 如果是通过 blur 事件触发的 close，检查设置
+        // 通过检查当前焦点来判断是否是 blur 事件触发的
+        if (document.activeElement !== this.inputEl) {
+            // 当前元素失去焦点，检查 hideOnBlur 设置
+            if (!(this.plugin.settings.hideOnBlur ?? true)) {
+                // 如果设置为不隐藏，则不关闭
+                return;
+            }
+        }
+        
+        // 调用父类的 close 方法
+        super.close();
     }
 
     updateSearchBarContainerElState(isActive: boolean){
@@ -238,6 +263,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         if (analysis.shouldJumpToHeading && analysis.matchedHeading) {
             const link = `${item.path}#${analysis.matchedHeading}`;
             this.app.workspace.openLinkText(link, '', newTab ?? false);
+            this.close(true); // 强制清理键盘事件监听器
             return;
         }
         // 处理 WebViewer URL
@@ -253,15 +279,24 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                     url: selectedItem.item.url
                 }
             });
+            this.close(true); // 强制清理键盘事件监听器
             return;
         }
 
         // 处理普通文件
         if(selectedItem.item.isCreated && selectedItem.item.file){
             this.openFile(selectedItem.item.file, newTab);
+            // 强制清理键盘事件监听器
+            this.close(true);
         }
         else{
-            this.handleFileCreation(selectedItem.item, newTab);
+            // 对于异步文件创建，在完成后再清理
+            this.handleFileCreation(selectedItem.item, newTab).then(() => {
+                this.close(true);
+            }).catch((error) => {
+                console.error('Error creating file:', error);
+                this.close(true); // 即使出错也要强制清理
+            });
         }
     }
 
@@ -442,5 +477,10 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         
         this.suggester.setSuggestions([]) // Reset search suggestions
         this.close()
+    }
+
+    destroy(): void {
+        // 调用父类的 destroy 方法
+        super.destroy()
     }
 }
