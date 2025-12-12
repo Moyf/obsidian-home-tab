@@ -28,6 +28,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
 
     private activeFilter: FileType | FileExtension  | null
     private matchAnalyzer: MatchAnalyzer
+    private customBlurHandler: () => void
 
     constructor(app: App, plugin: HomeTab, view: View, searchBar: HomeTabSearchBar) {
         super(app, get(searchBar.searchBarEl), get(searchBar.suggestionContainerEl), {
@@ -46,6 +47,9 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         this.view = view
         this.searchBar = searchBar
         this.matchAnalyzer = new MatchAnalyzer(plugin.settings)
+
+        // 重写 blur 事件处理，根据设置决定是否在失焦时关闭
+        this.setupBlurBehavior()
 
         this.app.metadataCache.onCleanCache(() => {
             if (this.plugin.settings.markdownOnly) {
@@ -101,6 +105,22 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         this.view.registerEvent(this.app.vault.on('delete', (file: TAbstractFile) => { if(file instanceof TFile){this.updateSearchfilesList(file)}}))
         this.view.registerEvent(this.app.vault.on('rename', (file: TAbstractFile, oldPath: string) => { if(file instanceof TFile){this.updateSearchfilesList(file, oldPath)}}))
         this.view.registerEvent(this.app.metadataCache.on('resolved', () => this.updateUnresolvedFiles()))
+    }
+
+    private setupBlurBehavior(): void {
+        // 移除默认的 blur 事件处理器
+        this.inputEl.removeEventListener('blur', this.close.bind(this))
+        
+        // 创建自定义的 blur 事件处理器并保存引用
+        this.customBlurHandler = () => {
+            // 检查设置，决定是否在失焦时关闭
+            if (this.plugin.settings.hideOnBlur ?? true) {
+                this.close()
+            }
+        }
+        
+        // 添加自定义的 blur 事件处理器
+        this.inputEl.addEventListener('blur', this.customBlurHandler)
     }
 
     updateSearchBarContainerElState(isActive: boolean){
@@ -442,5 +462,15 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         
         this.suggester.setSuggestions([]) // Reset search suggestions
         this.close()
+    }
+
+    destroy(): void {
+        // 清理自定义的 blur 事件处理器
+        if (this.customBlurHandler) {
+            this.inputEl.removeEventListener('blur', this.customBlurHandler)
+        }
+        
+        // 调用父类的 destroy 方法
+        super.destroy()
     }
 }

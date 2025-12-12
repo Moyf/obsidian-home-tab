@@ -61,6 +61,7 @@ export interface HomeTabSettings extends ObjectKeys{
     omnisearch: boolean
     showOmnisearchExcerpt: boolean
     debugMode?: boolean // 新增：调试模式，显示搜索和匹配的详细信息
+    hideOnBlur?: boolean // 新增：失去焦点时是否隐藏搜索结果
 }
 
 export const DEFAULT_SETTINGS: HomeTabSettings = {
@@ -100,6 +101,7 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     omnisearch: false,
     showOmnisearchExcerpt: true,
     debugMode: false, // 新增：默认关闭调试模式
+    hideOnBlur: true, // 新增：默认情况下失去焦点时隐藏搜索结果
 }
 
 
@@ -246,6 +248,18 @@ export class HomeTabSettingTab extends PluginSettingTab{
                 .setDynamicTooltip()
                 .onChange((value) => {this.plugin.settings.searchDelay = value; this.plugin.saveSettings(); this.plugin.refreshOpenViews()}))
             .then((settingEl) => this.addResetButton(settingEl, 'searchDelay'))
+
+        new Setting(containerEl)
+            .setName('Hide on blur')
+            .setDesc('Hide search results when the search input loses focus.')
+            .addToggle((toggle) => toggle
+                .setValue(this.plugin.settings.hideOnBlur ?? true)
+                .onChange((value) => {
+                    this.plugin.settings.hideOnBlur = value
+                    this.plugin.saveSettings()
+                    this.plugin.refreshOpenViews()
+                })
+            )
 
         if(this.plugin.app.plugins.getPlugin('omnisearch')){
             new Setting(containerEl)
