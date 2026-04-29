@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { File, FilePieChart, FileText, FileAudio, FileImage, FileVideo, X as DeleteIcon, MoreHorizontal} from 'lucide-svelte'
+    import { File, FilePieChart, FileText, FileAudio, FileImage, FileVideo, LayoutDashboard, Table, Database, X as DeleteIcon, MoreHorizontal} from 'lucide-svelte'
     import { type TFile, Keymap, type PaneType, App, Menu, getIcon } from 'obsidian';
     import { getFileTypeFromExtension } from 'src/utils/getFileTypeUtils';
 	import type { HomeTabSettings } from 'src/settings';
@@ -62,6 +62,12 @@
                 <FileAudio strokeWidth={1}/>
             {:else if fileType === 'pdf'}
                 <FilePieChart strokeWidth={1}/>
+            {:else if fileType === 'canvas'}
+                <LayoutDashboard strokeWidth={1}/>
+            {:else if fileType === 'base'}
+                <Table strokeWidth={1}/>
+            {:else if fileType === 'database'}
+                <Database strokeWidth={1}/>
             {:else}
                 <File strokeWidth={1}/>
             {/if}
