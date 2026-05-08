@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { File, FilePieChart, FileText, FileAudio, FileImage, FileVideo, X as DeleteIcon, MoreHorizontal} from 'lucide-svelte'
+    import { File, FilePieChart, FileText, FileAudio, FileImage, FileVideo, LayoutDashboard, Table, Database, X as DeleteIcon, MoreHorizontal} from 'lucide-svelte'
     import { type TFile, Keymap, type PaneType, App, Menu, getIcon } from 'obsidian';
     import { getFileTypeFromExtension } from 'src/utils/getFileTypeUtils';
 	import type { HomeTabSettings } from 'src/settings';
@@ -62,6 +62,12 @@
                 <FileAudio strokeWidth={1}/>
             {:else if fileType === 'pdf'}
                 <FilePieChart strokeWidth={1}/>
+            {:else if fileType === 'canvas'}
+                <LayoutDashboard strokeWidth={1}/>
+            {:else if fileType === 'base'}
+                <Table strokeWidth={1}/>
+            {:else if fileType === 'database'}
+                <Database strokeWidth={1}/>
             {:else}
                 <File strokeWidth={1}/>
             {/if}
@@ -120,5 +126,46 @@
 
     .home-tab-file-item-remove_btn:hover{
         opacity: 1;
+    }
+
+    @media(max-width: 600px){
+        .home-tab-file-item{
+            display: flex;
+            align-items: center;
+            max-width: 100%;
+            min-width: unset;
+            height: fit-content;
+            padding: 6px 8px;
+            margin: 0;
+        }
+        .home-tab-file-item-preview-icon{
+            flex-shrink: 0;
+            padding: 0;
+            margin-right: 8px;
+        }
+        .home-tab-file-item-preview-icon :global(svg){
+            width: 16px;
+            height: 16px;
+        }
+        .home-tab-file-item-name{
+            flex: 1;
+            text-align: left;
+            /* 单行截断 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            /* 覆盖宽屏的 -webkit-box 多行截断 */
+            -webkit-line-clamp: unset;
+            -webkit-box-orient: unset;
+            /* 给右侧绝对定位的菜单按钮留空间，避免重叠 */
+            padding-right: 28px;
+        }
+        .home-tab-file-item-remove_btn{
+            /* 保持绝对定位，但垂直居中 */
+            top: 50%;
+            right: 4px;
+            transform: translateY(-50%);
+        }
     }
 </style>
