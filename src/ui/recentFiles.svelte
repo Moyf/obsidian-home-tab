@@ -178,7 +178,16 @@
 
     @media(max-width: 600px){
         .home-tab-recent-files-container{
+            width: 90%;
             padding-bottom: 75px;
+        }
+        .home-tab-recent-files-wrapper{
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2px;
+            /* 取消宽屏居中相关设置 */
+            justify-content: unset;
+            align-items: unset;
         }
     }
 </style>

@@ -13,12 +13,13 @@ const fileTypeLookupTable: FileTypeLookupTable = {
     markdown : ['md'],
     pdf : ['pdf'],
     canvas: ['canvas'],
-    db: ['base, components', 'xdb'],
+    base: ['base'],
+    database: ['components', 'xdb'],
     webviewer: []
 }
 
 type FileTypeLookupTable = {[key in FileType]: string[]}
-export const fileTypes = ['markdown', 'image', 'video', 'audio', 'pdf', 'canvas', 'db', 'webviewer'] as const
+export const fileTypes = ['markdown', 'image', 'video', 'audio', 'pdf', 'canvas', 'base', 'database', 'webviewer'] as const
 export type FileType = typeof fileTypes[number]
 // export type FileType = 'image' | 'video' | 'audio' | 'markdown' | 'pdf'
 export const fileExtensions = ['jpg', 'jpeg', 'png', 'svg', 'gif', 'bmp', 'mp4', 'webm', 'ogv', 'mov', 'mkv', 
