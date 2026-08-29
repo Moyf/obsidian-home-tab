@@ -22,6 +22,13 @@ export interface BaseMessage {
 		files: string
 		appearance: string
 		developer: string
+		headingJump: string
+		results: string
+	}
+	page: {
+		search: SettingEntry
+		logo: SettingEntry
+		titleStyle: SettingEntry
 	}
 	setting: {
 		replaceNewTabs: SettingEntry

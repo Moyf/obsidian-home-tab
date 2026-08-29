@@ -11,6 +11,13 @@ const en: BaseMessage = {
 		files: 'Files',
 		appearance: 'Appearance',
 		developer: 'Developer',
+		headingJump: 'Heading navigation',
+		results: 'Results display',
+	},
+	page: {
+		search: { name: 'Search', desc: 'Search behavior, result display, and heading navigation.' },
+		logo: { name: 'Logo', desc: 'Logo type, source, color, and size.' },
+		titleStyle: { name: 'Title style', desc: 'Title text, font, size, weight, and color.' },
 	},
 	setting: {
 		replaceNewTabs: {

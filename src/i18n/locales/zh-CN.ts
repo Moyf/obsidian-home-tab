@@ -11,6 +11,13 @@ const zhCN: BaseMessage = {
 		files: '文件',
 		appearance: '外观',
 		developer: '开发者',
+		headingJump: '标题跳转',
+		results: '结果显示',
+	},
+	page: {
+		search: { name: '搜索', desc: '搜索行为、结果显示与标题跳转' },
+		logo: { name: 'Logo', desc: 'Logo 图标、来源、颜色与尺寸' },
+		titleStyle: { name: '标题样式', desc: '标题文本、字体、字号、字重与颜色' },
 	},
 	setting: {
 		replaceNewTabs: {
