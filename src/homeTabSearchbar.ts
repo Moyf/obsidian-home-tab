@@ -68,6 +68,12 @@ export default class HomeTabSearchBar{
         });
     }
 
+    // 网址功能是否可用：设置开关打开且网页浏览器(Web Viewer)核心插件已启用
+    private isWebUrlSuggestionEnabled(): boolean {
+        if (!this.plugin.settings.webUrlSuggestions) return false;
+        return !!(this.app.internalPlugins.getPluginById('webviewer') || this.app.internalPlugins.getPluginById('webbrowser'));
+    }
+
     private handleInput(query: string): void {
         // 如果还没有建议器，创建默认的
         if (!this.fileSuggester) {
@@ -75,7 +81,7 @@ export default class HomeTabSearchBar{
         }
         
         // 如果是 URL 且不在移动端，切换到 WebViewerSuggester
-        if (query && isValidUrl(query) && !Platform.isMobile) {
+        if (query && isValidUrl(query) && !Platform.isMobile && this.isWebUrlSuggestionEnabled()) {
             if (!(this.fileSuggester instanceof WebViewerSuggester)) {
                 // 确保先关闭旧的建议器
                 this.fileSuggester.close();
@@ -140,7 +146,7 @@ export default class HomeTabSearchBar{
         }
         
         // 如果是 URL 且不在移动端，使用 WebViewerSuggester
-        if (query && isValidUrl(query) && !Platform.isMobile) {
+        if (query && isValidUrl(query) && !Platform.isMobile && this.isWebUrlSuggestionEnabled()) {
             this.fileSuggester = new WebViewerSuggester(this.plugin.app, this.plugin, this.view, this);
             this.fileSuggester.onInput();
             return;
@@ -160,7 +166,7 @@ export default class HomeTabSearchBar{
         const query = get(this.searchBarEl)?.value?.trim() || '';
 
         // 如果是 URL 且不在移动端，始终使用 WebViewerSuggester
-        if (query && isValidUrl(query) && !Platform.isMobile) {
+        if (query && isValidUrl(query) && !Platform.isMobile && this.isWebUrlSuggestionEnabled()) {
             filterEl.toggleClass('hide', true);
             this.createSuggester(query);
             return;

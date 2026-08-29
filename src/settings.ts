@@ -60,6 +60,7 @@ export interface HomeTabSettings extends ObjectKeys{
     closePreviousSessionTabs: boolean
     omnisearch: boolean
     showOmnisearchExcerpt: boolean
+    webUrlSuggestions: boolean // 新增：网址功能开关，检测搜索栏输入的网址并建议用网页浏览器打开
     debugMode?: boolean // 新增：调试模式，显示搜索和匹配的详细信息
     hideOnBlur?: boolean // 新增：失去焦点时是否隐藏搜索结果
 }
@@ -100,6 +101,7 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     closePreviousSessionTabs: false,
     omnisearch: false,
     showOmnisearchExcerpt: true,
+    webUrlSuggestions: true, // 新增：默认开启网址功能（仅当网页浏览器核心插件可用时生效）
     debugMode: false, // 新增：默认关闭调试模式
     hideOnBlur: true, // 新增：默认情况下失去焦点时隐藏搜索结果
 }
@@ -143,6 +145,14 @@ export class HomeTabSettingTab extends PluginSettingTab{
         }
 
 		containerEl.createEl('h2', {text: 'Search settings'});
+        if(this.plugin.app.internalPlugins.getPluginById('webviewer') || this.plugin.app.internalPlugins.getPluginById('webbrowser')){
+            new Setting(containerEl)
+                .setName('Web link suggestions')
+                .setDesc('Detect web addresses typed in the search bar and offer to open them with the Web Viewer core plugin.')
+                .addToggle(toggle => toggle
+                    .setValue(this.plugin.settings.webUrlSuggestions)
+                    .onChange(value => {this.plugin.settings.webUrlSuggestions = value; this.plugin.saveSettings(); this.plugin.refreshOpenViews()}))
+        }
         if(this.plugin.app.plugins.getPlugin('omnisearch')){
             new Setting(containerEl)
                 .setName('Use Omnisearch')
