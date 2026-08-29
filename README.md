@@ -1,5 +1,7 @@
 # First Light
 
+https://github.com/user-attachments/assets/c73c1297-568a-4991-acaf-82c623e116fe
+
 First Light is a modernized continuation of [Home tab](https://github.com/olrenso/Obsidian-home-tab) by [olrenso](https://github.com/olrenso) — an [Obsidian](https://obsidian.md/) plugin that adds a browser-like default new tab with a search bar and a grid of starred files, now with ongoing updates and new features.
 
 *Your vault, at first light.*
