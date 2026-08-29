@@ -1,12 +1,14 @@
 # Changelog
 
-## [Unreleased]
+## [1.3.0] - 2026-08-30
 
 ### Features
 
+- Add an interactive particle wordmark effect: render the logo and title as a dot grid that ripples around the cursor, with a monochrome mode (luminance-shaded single hue) and tunable parameters (canvas scale, particle spacing, dot size, disturbance radius/strength)
+- Organize settings into native sub-pages (Search / Logo / Title style / Particle effect) with the declarative settings API
+- Rebrand the plugin as **First Light**
 - Modernize the settings tab with the Obsidian 1.13 declarative settings API (`getSettingDefinitions`)
 - Add a plugin icon (`house`) to the settings sidebar
-- Organize settings into native setting groups (Search / Files / Appearance / Developer)
 - Add i18n support with English and Simplified Chinese locales (`getLanguage()`-based)
 
 ### Improvements

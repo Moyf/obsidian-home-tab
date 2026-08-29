@@ -1,6 +1,8 @@
-# Hometab Plus
+# First Light
 
-Hometab Plus is a modernized continuation of [Home tab](https://github.com/olrenso/Obsidian-home-tab) by [olrenso](https://github.com/olrenso) — an [Obsidian](https://obsidian.md/) plugin that adds a browser-like default new tab with a search bar and a grid of starred files, now with ongoing updates and new features.
+First Light is a modernized continuation of [Home tab](https://github.com/olrenso/Obsidian-home-tab) by [olrenso](https://github.com/olrenso) — an [Obsidian](https://obsidian.md/) plugin that adds a browser-like default new tab with a search bar and a grid of starred files, now with ongoing updates and new features.
+
+*Your vault, at first light.*
 
 You can search any local file in your vault, both markdown notes and attachments.
 
@@ -8,9 +10,10 @@ You can search any local file in your vault, both markdown notes and attachments
 
 This plugin is not meant to be a replacement for the default Quick switcher or any alternative one like [Another quick switcher](https://github.com/tadashi-aikawa/obsidian-another-quick-switcher) (from which I took inspiration), but rather a faster way to open a note or a file after opening a new tab.
 
-## What's new in Plus
+## What's new
 Compared to the original Home tab, this fork continues development with:
 
+- **Particle wordmark** — render the logo and title as an interactive particle grid that ripples around the cursor, with a monochrome mode and tunable canvas parameters
 - **Heading search & jump** — search through document headings and automatically jump to the matched one, with a smart jump strategy
 - **Web link suggestions** — detect web addresses typed in the search bar and offer to open them with the Web Viewer core plugin
 - **Localization** — English and Simplified Chinese
