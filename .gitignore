@@ -39,3 +39,6 @@ main.js
 main.js
 /.omo
 /.agents
+
+# npm lockfile (project uses pnpm)
+package-lock.json
