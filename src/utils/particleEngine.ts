@@ -9,10 +9,7 @@
  * reusable and testable outside the plugin UI layer.
  */
 
-export type ParticleWordmarkMode = 'logoTitle' | 'logo' | 'title'
-
 export interface ParticleWordmarkOptions {
-    mode: ParticleWordmarkMode
     monochrome: boolean
     color: string
     /** Enlargement of the canvas content relative to the original wordmark box. */
@@ -277,12 +274,12 @@ export class ParticleWordmarkEngine {
         }
     }
 
-    /** Finds the logo and/or title sources according to the configured mode. */
+    /** Finds the logo and title sources (always captured together). */
     private collectSources(containerRect: { left: number; top: number }): CapturedSources {
         const ops: DrawOp[] = []
         const hiddenElements: HTMLElement[] = []
 
-        if (this.options.mode !== 'title') {
+        {
             const logoContainer = this.container.querySelector<HTMLElement>('.home-tab-logo')
             if (logoContainer) {
                 const svg = logoContainer.querySelector<SVGSVGElement>('svg')
@@ -304,7 +301,7 @@ export class ParticleWordmarkEngine {
             }
         }
 
-        if (this.options.mode !== 'logo') {
+        {
             const heading = this.container.querySelector<HTMLHeadingElement>('.home-tab-wordmark h1')
             if (heading && heading.textContent && heading.textContent.trim().length > 0) {
                 const rect = heading.getBoundingClientRect()

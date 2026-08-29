@@ -1,19 +1,12 @@
 <script lang="ts">
     import { onDestroy, onMount } from 'svelte'
     import { pluginSettingsStore } from '../store'
-    import { ParticleWordmarkEngine, type ParticleWordmarkMode } from '../utils/particleEngine'
+    import { ParticleWordmarkEngine } from '../utils/particleEngine'
     import type { HomeTabSettings } from '../settings'
 
-    export let enabled: boolean
-    export let mode: ParticleWordmarkMode
-    export let monochrome: boolean
-    export let color: string
-    export let zoom: number
-    export let spacing: number
-    export let dotSize: number
-    export let disturbRadius: number
-    export let disturbStrength: number
-
+    // Deliberately prop-free: everything is read from the settings store, so
+    // parent re-renders can never invalidate this component and trigger
+    // spurious rebuilds. The store subscription is the only update path.
     let rootEl: HTMLElement
 
     let engine: ParticleWordmarkEngine | null = null
@@ -21,6 +14,8 @@
     let hasBuilt = false
     let loading = false
     let unsubscribeSettings: (() => void) | undefined
+    let rebuildTimestamps: number[] = []
+    let settings: HomeTabSettings | undefined = undefined
 
     function destroyEngine(): void {
         console.log('[home-tab] particle: destroying engine')
@@ -39,12 +34,12 @@
      * element, which stays padding-free.
      */
     function reserveLayout(): void {
-        if (!rootEl) return
+        if (!rootEl || !settings) return
         const content = rootEl.querySelector<HTMLElement>('.home-tab-wordmark-container')
         if (!content) return
         const height = content.getBoundingClientRect().height
         if (height <= 0) return
-        rootEl.style.padding = `${((zoom - 1) * height) / 2}px 0`
+        rootEl.style.padding = `${((settings.particleEffectScale - 1) * height) / 2}px 0`
     }
 
     function releaseLayout(): void {
@@ -58,17 +53,16 @@
      * takes over again.
      */
     async function createEngine(): Promise<void> {
-        if (!rootEl) return
+        if (!rootEl || !settings) return
         reserveLayout()
         engine = new ParticleWordmarkEngine(rootEl, {
-            mode,
-            monochrome,
-            color,
-            zoom,
-            spacing,
-            dotSize,
-            repulsionRadius: disturbRadius,
-            repulsionStrength: disturbStrength,
+            monochrome: settings.particleEffectMonochrome,
+            color: settings.particleEffectColor,
+            zoom: settings.particleEffectScale,
+            spacing: settings.particleEffectSpacing,
+            dotSize: settings.particleEffectDotSize,
+            repulsionRadius: settings.particleEffectDisturbRadius,
+            repulsionStrength: settings.particleEffectDisturbStrength,
         })
         loading = true
         const tookOver = await engine.build()
@@ -84,11 +78,20 @@
     /**
      * Debounced destroy + recreate, so dragging the color picker or switching
      * dropdowns doesn't thrash the engine. The first run builds immediately.
+     * A circuit breaker pauses auto-rebuilds when something triggers them in
+     * a tight loop.
      */
     function scheduleRebuild(): void {
-        if (!rootEl) return
+        if (!rootEl || !settings) return
+        const now = Date.now()
+        rebuildTimestamps = rebuildTimestamps.filter((time) => now - time < 3000)
+        rebuildTimestamps.push(now)
+        if (rebuildTimestamps.length > 5) {
+            console.warn('[home-tab] particle: rebuild loop detected; auto-rebuild paused.')
+            return
+        }
         window.clearTimeout(rebuildTimer)
-        if (!enabled) {
+        if (!settings.particleEffect) {
             destroyEngine()
             hasBuilt = true
             return
@@ -105,58 +108,46 @@
         }, 250)
     }
 
-    // Reactive: (re)build whenever the engine props or the root element change.
-    // The arguments exist to establish the Svelte reactive dependencies.
-    function propsChanged(enabledDep: boolean, modeDep: ParticleWordmarkMode, monochromeDep: boolean, colorDep: string, zoomDep: number, spacingDep: number, dotSizeDep: number, disturbRadiusDep: number, disturbStrengthDep: number, rootElDep: HTMLElement): void {
-        void enabledDep
-        void modeDep
-        void monochromeDep
-        void colorDep
-        void zoomDep
-        void spacingDep
-        void dotSizeDep
-        void disturbRadiusDep
-        void disturbStrengthDep
-        void rootElDep
-        scheduleRebuild()
-    }
-
-    $: propsChanged(enabled, mode, monochrome, color, zoom, spacing, dotSize, disturbRadius, disturbStrength, rootEl)
-
-    /**
-     * Wordmark-related settings that require resampling the particles.
-     * Embedded views (search-bar code blocks) are never rebuilt on settings
-     * changes, so the settings store is their only update path.
-     */
-    function appearanceSignature(settings: HomeTabSettings): string {
+    /** Everything the engine or the rasterized source rendering depends on. */
+    function appearanceSignature(s: HomeTabSettings): string {
         return [
-            settings.logoType,
-            JSON.stringify(settings.logo),
-            settings.iconColorType,
-            settings.iconColor,
-            settings.wordmark,
-            settings.customFont,
-            settings.font,
-            settings.fontSize,
-            settings.fontWeight,
-            settings.fontColorType,
-            settings.fontColor,
+            s.particleEffect,
+            s.particleEffectMonochrome,
+            s.particleEffectColor,
+            s.particleEffectScale,
+            s.particleEffectSpacing,
+            s.particleEffectDotSize,
+            s.particleEffectDisturbRadius,
+            s.particleEffectDisturbStrength,
+            s.logoType,
+            JSON.stringify(s.logo),
+            s.iconColorType,
+            s.iconColor,
+            s.wordmark,
+            s.customFont,
+            s.font,
+            s.fontSize,
+            s.fontWeight,
+            s.fontColorType,
+            s.fontColor,
         ].join('|')
     }
 
     onMount(() => {
         let lastAppearance: string | null = null
-        unsubscribeSettings = pluginSettingsStore.subscribe((settings) => {
-            if (!settings) return
-            const signature = appearanceSignature(settings)
-            // Skip the initial emit: the initial build already reflects it.
+        unsubscribeSettings = pluginSettingsStore.subscribe((s) => {
+            if (!s) return
+            settings = s
+            const signature = appearanceSignature(s)
+            // The first emit drives the initial build; later ones only
+            // rebuild when the signature actually changed.
             if (lastAppearance === null) {
                 lastAppearance = signature
+                if (s.particleEffect) scheduleRebuild()
                 return
             }
             if (signature === lastAppearance) return
             lastAppearance = signature
-            if (!enabled || !hasBuilt) return
             scheduleRebuild()
         })
     })
@@ -168,20 +159,13 @@
     })
 </script>
 
-<div bind:this={rootEl} class:home-tab-particle-loading={loading} data-scope={mode}><slot/></div>
+<div bind:this={rootEl} class:home-tab-particle-loading={loading}><slot/></div>
 
 <style>
     /* Hide the original wordmark synchronously while the particle canvas
-       builds, so it never flashes; elements outside the capture scope stay
-       visible (e.g. the title when the scope is logo-only). */
+       builds, so it never flashes (both parts are always captured). */
     .home-tab-particle-loading :global(.home-tab-logo),
     .home-tab-particle-loading :global(.home-tab-wordmark) {
         visibility: hidden;
-    }
-    .home-tab-particle-loading[data-scope='logo'] :global(.home-tab-wordmark) {
-        visibility: visible;
-    }
-    .home-tab-particle-loading[data-scope='title'] :global(.home-tab-logo) {
-        visibility: visible;
     }
 </style>

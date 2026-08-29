@@ -5,20 +5,23 @@ const zhCN: BaseMessage = {
 		openNewTab: '打开新标签页',
 		replaceCurrentTab: '替换当前标签页',
 	},
-	viewName: '主页标签页',
+	viewName: 'First Light',
 	group: {
 		search: '搜索',
 		files: '文件',
 		appearance: '外观',
-		particleEffect: '粒子特效',
 		developer: '开发者',
 		headingJump: '标题跳转',
 		results: '结果显示',
+		particleStyle: '样式',
+		particleCanvas: '画布',
+		particleInteraction: '交互',
 	},
 	page: {
 		search: { name: '搜索', desc: '搜索行为、结果显示与标题跳转' },
 		logo: { name: 'Logo', desc: 'Logo 图标、来源、颜色与尺寸' },
 		titleStyle: { name: '标题样式', desc: '标题文本、字体、字号、字重与颜色' },
+		particleEffect: { name: '粒子特效', desc: 'Logo 与标题的交互式粒子渲染' },
 	},
 	setting: {
 		replaceNewTabs: {
@@ -172,16 +175,7 @@ const zhCN: BaseMessage = {
 		},
 		particleEffect: {
 			name: '启用粒子特效',
-			desc: '将主页的 Logo 与标题渲染为可交互的粒子点阵，鼠标经过时产生涟漪效果（灵感来自明日方舟官网）',
-		},
-		particleEffectScope: {
-			name: '生效范围',
-			desc: '选择粒子特效作用的区域',
-			options: {
-				logoTitle: 'Logo + 标题',
-				logo: '仅 Logo',
-				title: '仅标题',
-			},
+			desc: '将主页的 Logo 与标题渲染为可交互的粒子点阵，鼠标经过时产生涟漪效果',
 		},
 		particleEffectMonochrome: {
 			name: '单色模式',

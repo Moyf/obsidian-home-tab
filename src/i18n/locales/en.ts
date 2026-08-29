@@ -5,20 +5,23 @@ const en: BaseMessage = {
 		openNewTab: 'Open new tab',
 		replaceCurrentTab: 'Replace current tab',
 	},
-	viewName: 'Home tab',
+	viewName: 'First Light',
 	group: {
 		search: 'Search',
 		files: 'Files',
 		appearance: 'Appearance',
-		particleEffect: 'Particle effect',
 		developer: 'Developer',
 		headingJump: 'Heading navigation',
 		results: 'Results display',
+		particleStyle: 'Style',
+		particleCanvas: 'Canvas',
+		particleInteraction: 'Interaction',
 	},
 	page: {
 		search: { name: 'Search', desc: 'Search behavior, result display, and heading navigation.' },
 		logo: { name: 'Logo', desc: 'Logo type, source, color, and size.' },
 		titleStyle: { name: 'Title style', desc: 'Title text, font, size, weight, and color.' },
+		particleEffect: { name: 'Particle effect', desc: 'Interactive particle rendering for the logo and title.' },
 	},
 	setting: {
 		replaceNewTabs: {
@@ -172,16 +175,7 @@ const en: BaseMessage = {
 		},
 		particleEffect: {
 			name: 'Enable particle effect',
-			desc: 'Render the home tab logo and title as an interactive particle grid that ripples around the cursor (inspired by the Arknights website)',
-		},
-		particleEffectScope: {
-			name: 'Scope',
-			desc: 'Choose which parts are rendered as particles',
-			options: {
-				logoTitle: 'Logo + title',
-				logo: 'Logo only',
-				title: 'Title only',
-			},
+			desc: 'Render the home tab logo and title as an interactive particle grid that ripples around the cursor',
 		},
 		particleEffectMonochrome: {
 			name: 'Monochrome',

@@ -10,7 +10,6 @@ import fontSuggester from './suggester/fontSuggester'
 import type { recentFileStore } from './recentFiles'
 import type { bookmarkedFileStore } from './bookmarkedFiles'
 import { checkFont } from './utils/fontValidator'
-import type { ParticleWordmarkMode } from './utils/particleEngine'
 import { t as getLocale } from './i18n'
 
 type ColorChoices = 'default' | 'accentColor' | 'custom'
@@ -41,7 +40,6 @@ export interface HomeTabSettings extends ObjectKeys{
     fontColorType: ColorChoices
     fontWeight: number
     particleEffect: boolean
-    particleEffectScope: ParticleWordmarkMode
     particleEffectMonochrome: boolean
     particleEffectColor: string
     particleEffectScale: number
@@ -91,7 +89,6 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     fontColorType: 'default',
     fontWeight: 600,
     particleEffect: false,
-    particleEffectScope: 'logoTitle',
     particleEffectMonochrome: false,
     particleEffectColor: '#6C31E3',
     particleEffectScale: 2,
@@ -438,69 +435,75 @@ export class HomeTabSettingTab extends PluginSettingTab {
                                 { default: t.common.themeDefault, accentColor: t.common.accentColor }, { refreshAfterChange: true }),
                         ],
                     },
-                ],
-            },
-
-            // Particle effect
-            {
-                type: 'group',
-                heading: t.group.particleEffect,
-                items: [
                     {
-                        name: t.setting.particleEffect.name,
-                        desc: t.setting.particleEffect.desc,
-                        control: { type: 'toggle', key: 'particleEffect', defaultValue: false },
-                    },
-                    {
-                        name: t.setting.particleEffectScope.name,
-                        desc: t.setting.particleEffectScope.desc,
-                        visible: () => s.particleEffect,
-                        control: {
-                            type: 'dropdown',
-                            key: 'particleEffectScope',
-                            defaultValue: 'logoTitle',
-                            options: t.setting.particleEffectScope.options,
-                        },
-                    },
-                    {
-                        name: t.setting.particleEffectMonochrome.name,
-                        desc: t.setting.particleEffectMonochrome.desc,
-                        visible: () => s.particleEffect,
-                        control: { type: 'toggle', key: 'particleEffectMonochrome', defaultValue: false },
-                    },
-                    {
-                        name: t.setting.particleEffectColor.name,
-                        desc: t.setting.particleEffectColor.desc,
-                        visible: () => s.particleEffect && s.particleEffectMonochrome,
-                        render: (setting) => {
-                            setting.addColorPicker((picker) => picker
-                                .setValue(s.particleEffectColor)
-                                .onChange((value) => {
-                                    s.particleEffectColor = value
-                                    void this.plugin.saveSettings()
-                                }))
-                            this.addResetButton(setting, 'particleEffectColor')
-                        },
-                    },
-                    {
-                        ...this.sliderWithReset('particleEffectScale', t.setting.particleEffectScale.name, t.setting.particleEffectScale.desc, 1, 3, 0.1),
-                        visible: () => s.particleEffect,
-                    },
-                    {
-                        ...this.sliderWithReset('particleEffectSpacing', t.setting.particleEffectSpacing.name, t.setting.particleEffectSpacing.desc, 2, 10, 0.5),
-                        visible: () => s.particleEffect,
-                    },
-                    {
-                        ...this.sliderWithReset('particleEffectDotSize', t.setting.particleEffectDotSize.name, t.setting.particleEffectDotSize.desc, 0.5, 3, 0.1),
-                        visible: () => s.particleEffect,
-                    },
-                    {
-                        ...this.sliderWithReset('particleEffectDisturbRadius', t.setting.particleEffectDisturbRadius.name, t.setting.particleEffectDisturbRadius.desc, 10, 150, 1),
-                        visible: () => s.particleEffect,
-                    },
-                    {
-                        ...this.sliderWithReset('particleEffectDisturbStrength', t.setting.particleEffectDisturbStrength.name, t.setting.particleEffectDisturbStrength.desc, 0.1, 3, 0.1),
-                        visible: () => s.particleEffect,
+                        type: 'page',
+                        name: t.page.particleEffect.name,
+                        desc: t.page.particleEffect.desc,
+                        items: [
+                            {
+                                name: t.setting.particleEffect.name,
+                                desc: t.setting.particleEffect.desc,
+                                control: { type: 'toggle', key: 'particleEffect', defaultValue: false },
+                            },
+                            {
+                                type: 'group',
+                                heading: t.group.particleStyle,
+                                items: [
+                                    {
+                                        name: t.setting.particleEffectMonochrome.name,
+                                        desc: t.setting.particleEffectMonochrome.desc,
+                                        visible: () => s.particleEffect,
+                                        control: { type: 'toggle', key: 'particleEffectMonochrome', defaultValue: false },
+                                    },
+                                    {
+                                        name: t.setting.particleEffectColor.name,
+                                        desc: t.setting.particleEffectColor.desc,
+                                        visible: () => s.particleEffect && s.particleEffectMonochrome,
+                                        render: (setting) => {
+                                            setting.addColorPicker((picker) => picker
+                                                .setValue(s.particleEffectColor)
+                                                .onChange((value) => {
+                                                    s.particleEffectColor = value
+                                                    void this.plugin.saveSettings()
+                                                }))
+                                            this.addResetButton(setting, 'particleEffectColor')
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                type: 'group',
+                                heading: t.group.particleCanvas,
+                                items: [
+                                    {
+                                        ...this.sliderWithReset('particleEffectScale', t.setting.particleEffectScale.name, t.setting.particleEffectScale.desc, 1, 3, 0.1),
+                                        visible: () => s.particleEffect,
+                                    },
+                                    {
+                                        ...this.sliderWithReset('particleEffectSpacing', t.setting.particleEffectSpacing.name, t.setting.particleEffectSpacing.desc, 2, 10, 0.5),
+                                        visible: () => s.particleEffect,
+                                    },
+                                    {
+                                        ...this.sliderWithReset('particleEffectDotSize', t.setting.particleEffectDotSize.name, t.setting.particleEffectDotSize.desc, 0.5, 3, 0.1),
+                                        visible: () => s.particleEffect,
+                                    },
+                                ],
+                            },
+                            {
+                                type: 'group',
+                                heading: t.group.particleInteraction,
+                                items: [
+                                    {
+                                        ...this.sliderWithReset('particleEffectDisturbRadius', t.setting.particleEffectDisturbRadius.name, t.setting.particleEffectDisturbRadius.desc, 10, 150, 1),
+                                        visible: () => s.particleEffect,
+                                    },
+                                    {
+                                        ...this.sliderWithReset('particleEffectDisturbStrength', t.setting.particleEffectDisturbStrength.name, t.setting.particleEffectDisturbStrength.desc, 0.1, 3, 0.1),
+                                        visible: () => s.particleEffect,
+                                    },
+                                ],
+                            },
+                        ],
                     },
                 ],
             },

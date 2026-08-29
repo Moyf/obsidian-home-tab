@@ -21,15 +21,18 @@ export interface BaseMessage {
 		search: string
 		files: string
 		appearance: string
-		particleEffect: string
 		developer: string
 		headingJump: string
 		results: string
+		particleStyle: string
+		particleCanvas: string
+		particleInteraction: string
 	}
 	page: {
 		search: SettingEntry
 		logo: SettingEntry
 		titleStyle: SettingEntry
+		particleEffect: SettingEntry
 	}
 	setting: {
 		replaceNewTabs: SettingEntry
@@ -73,7 +76,6 @@ export interface BaseMessage {
 		titleColor: SettingEntry
 		selectionHighlight: SettingEntry
 		particleEffect: SettingEntry
-		particleEffectScope: SettingEntry & { options: DropdownOptions }
 		particleEffectMonochrome: SettingEntry
 		particleEffectColor: SettingEntry
 		particleEffectScale: SettingEntry

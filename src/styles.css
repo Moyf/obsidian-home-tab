@@ -99,3 +99,26 @@
 .setting-item-info.ultra-compressed{
     width: 20%;
 }
+
+/* Native <input type="color"> renders unstyled (invisible on dark themes)
+   when used through the declarative settings render callback; give it
+   explicit chrome. Obsidian's own pickers use .color-picker and are left
+   untouched. */
+.setting-item-control input[type='color']:not(.color-picker){
+    width: 48px;
+    height: 24px;
+    padding: 0;
+    margin: 0;
+    flex: none;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: var(--radius-s);
+    background-color: transparent;
+    cursor: pointer;
+}
+.setting-item-control input[type='color']:not(.color-picker)::-webkit-color-swatch-wrapper{
+    padding: 2px;
+}
+.setting-item-control input[type='color']:not(.color-picker)::-webkit-color-swatch{
+    border: none;
+    border-radius: calc(var(--radius-s) - 1px);
+}

@@ -46,7 +46,7 @@
   
 <main class="home-tab" class:embedded={embeddedView}>
     {#if !embeddedView?.searchbarOnly}
-        <ParticleWordmark enabled={pluginSettings.particleEffect} mode={pluginSettings.particleEffectScope} monochrome={pluginSettings.particleEffectMonochrome} color={pluginSettings.particleEffectColor} zoom={pluginSettings.particleEffectScale} spacing={pluginSettings.particleEffectSpacing} dotSize={pluginSettings.particleEffectDotSize} disturbRadius={pluginSettings.particleEffectDisturbRadius} disturbStrength={pluginSettings.particleEffectDisturbStrength}>
+        <ParticleWordmark>
         <div class="home-tab-wordmark-container">
             {#if !(pluginSettings.logoType === 'none')}
                 <div class="home-tab-logo" style="margin-right: calc({pluginSettings.fontSize}/5)">
