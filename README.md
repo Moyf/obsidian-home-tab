@@ -1,15 +1,22 @@
-## 🚧 Not currently maintained
-⚠️ Due to time constraints, I am unable to actively maintain or improve this plugin at the moment. However, your contributions are highly appreciated! Feel free to open pull requests or fork the project to continue its development.
+# Hometab Plus
 
----
-# Obsidian Home tab
-Obsidian Home tab is an [Obsidian](https://obsidian.md/) plugin that adds a browser-like home default new tab with a search bar and a grid of starred files.
+Hometab Plus is a modernized continuation of [Home tab](https://github.com/olrenso/Obsidian-home-tab) by [olrenso](https://github.com/olrenso) — an [Obsidian](https://obsidian.md/) plugin that adds a browser-like default new tab with a search bar and a grid of starred files, now with ongoing updates and new features.
 
 You can search any local file in your vault, both markdown notes and attachments.
 
 ![](images/home-tab.png)
 
 This plugin is not meant to be a replacement for the default Quick switcher or any alternative one like [Another quick switcher](https://github.com/tadashi-aikawa/obsidian-another-quick-switcher) (from which I took inspiration), but rather a faster way to open a note or a file after opening a new tab.
+
+## What's new in Plus
+Compared to the original Home tab, this fork continues development with:
+
+- **Heading search & jump** — search through document headings and automatically jump to the matched one, with a smart jump strategy
+- **Web link suggestions** — detect web addresses typed in the search bar and offer to open them with the Web Viewer core plugin
+- **Localization** — English and Simplified Chinese
+- **Modernized settings tab** — rebuilt on Obsidian's declarative settings API, organized into sub-pages
+- **Hide on blur** — optionally hide search results when the search bar loses focus
+- **Debug mode** — detailed logging for search and match analysis
 
 ## How to use
 By default, every new empty tab is automatically replaced with the Home tab view. You can disable this behavior in the settings and manually open a new Home tab through the command palette with the commands `Home tab: Open new Home tab` or `Home tab: Replace current tab`.
@@ -72,6 +79,6 @@ The plugin may not work with (or interfere with) other plugins that replace the 
 
 ---
 # How to install
-The plugin is available directly from the [Obsidian plugin browser](https://obsidian.md/plugins?id=home-tab).
-Alternatively, you can install with [BRAT](https://github.com/TfTHacker/obsidian42-brat) by using the following links: `https://github.com/olrenso/Obsidian-home-tab` or `olrenso/Obsidian-home-tab`.
+The plugin will be available directly from the [Obsidian plugin browser](https://obsidian.md/plugins?id=home-tab-plus).
+Alternatively, you can install with [BRAT](https://github.com/TfTHacker/obsidian42-brat) by using the following links: `https://github.com/Moyf/obsidian-home-tab` or `Moyf/obsidian-home-tab`.
 

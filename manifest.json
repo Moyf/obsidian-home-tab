@@ -1,10 +1,10 @@
 {
-	"id": "home-tab",
+	"id": "home-tab-plus",
 	"name": "Hometab Plus",
 	"version": "1.2.3",
 	"minAppVersion": "1.13.0",
-	"description": "A browser-like search tab for your local files.",
+	"description": "A modernized continuation of Home tab: browser-like new tab with file search, heading jump navigation, web link suggestions, starred and recent files, and English & Simplified Chinese localization.",
 	"author": "Renso, Moy",
-	"authorUrl": "https://github.com/olrenso",
+	"authorUrl": "https://github.com/Moyf",
 	"isDesktopOnly": false
 }
