@@ -11,6 +11,7 @@ import {
 } from 'obsidian';
 import { EmbeddedHomeTab, HomeTabView, VIEW_TYPE } from 'src/homeView';
 import { HomeTabSettingTab, DEFAULT_SETTINGS, type HomeTabSettings } from './settings'
+import { t } from './i18n'
 import { pluginSettingsStore, bookmarkedFiles } from './store'
 import { RecentFileManager } from './recentFiles';
 import { bookmarkedFilesManager } from './bookmarkedFiles';
@@ -93,11 +94,11 @@ export default class HomeTab extends Plugin {
 
 		this.addCommand({
 			id: 'open-new-home-tab',
-			name: 'Open new Home tab',
+			name: t().command.openNewTab,
 			callback: () => this.activateView(false, true)})
 		this.addCommand({
 			id: 'open-home-tab',
-			name: 'Replace current tab',
+			name: t().command.replaceCurrentTab,
 			callback: () => this.activateView(true)})
 
 		// Wait for all plugins to load before check if the bookmarked plugin is enabled
