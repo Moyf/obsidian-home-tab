@@ -41,6 +41,7 @@ const zhCN: BaseMessage = {
 		},
 		markdownOnly: {
 			name: '仅搜索 Markdown 文件',
+			desc: '开启后搜索结果仅包含 Markdown 笔记，不再匹配附件。',
 		},
 		additionalExtensions: {
 			name: '额外搜索的扩展名',
@@ -48,6 +49,7 @@ const zhCN: BaseMessage = {
 		},
 		unresolvedLinks: {
 			name: '显示未创建的文件',
+			desc: '在搜索结果中显示指向尚未创建的文件的链接。',
 		},
 		searchTitle: {
 			name: '搜索文件标题',

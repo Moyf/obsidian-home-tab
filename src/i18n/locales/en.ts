@@ -41,6 +41,7 @@ const en: BaseMessage = {
 		},
 		markdownOnly: {
 			name: 'Search only markdown files',
+			desc: 'When enabled, search results only include markdown notes and no longer match attachments.',
 		},
 		additionalExtensions: {
 			name: 'Additional extensions to search',
@@ -48,6 +49,7 @@ const en: BaseMessage = {
 		},
 		unresolvedLinks: {
 			name: 'Show uncreated files',
+			desc: 'Show links to files that have not been created yet in the search results.',
 		},
 		searchTitle: {
 			name: 'Search file titles',
