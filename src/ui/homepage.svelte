@@ -1,5 +1,6 @@
 <script lang="ts">
     import SearchBar from './searchBar.svelte';
+    import ParticleWordmark from './particleWordmark.svelte';
     import type { HomeTabSettings } from 'src/settings';
     import { pluginSettingsStore, recentFiles, bookmarkedFiles } from '../store'
     import { getIcon, View } from 'obsidian'
@@ -45,6 +46,7 @@
   
 <main class="home-tab" class:embedded={embeddedView}>
     {#if !embeddedView?.searchbarOnly}
+        <ParticleWordmark enabled={pluginSettings.particleEffect} mode={pluginSettings.particleEffectScope} monochrome={pluginSettings.particleEffectMonochrome} color={pluginSettings.particleEffectColor} zoom={pluginSettings.particleEffectScale} spacing={pluginSettings.particleEffectSpacing} dotSize={pluginSettings.particleEffectDotSize} disturbRadius={pluginSettings.particleEffectDisturbRadius} disturbStrength={pluginSettings.particleEffectDisturbStrength}>
         <div class="home-tab-wordmark-container">
             {#if !(pluginSettings.logoType === 'none')}
                 <div class="home-tab-logo" style="margin-right: calc({pluginSettings.fontSize}/5)">
@@ -153,6 +155,7 @@
                 </h1>
             </div>
         </div>
+        </ParticleWordmark>
     {/if}
     
     <SearchBar {HomeTabSearchBar} embedded={embeddedView ? true : false}/>

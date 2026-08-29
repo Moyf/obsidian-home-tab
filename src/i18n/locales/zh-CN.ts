@@ -10,6 +10,7 @@ const zhCN: BaseMessage = {
 		search: '搜索',
 		files: '文件',
 		appearance: '外观',
+		particleEffect: '粒子特效',
 		developer: '开发者',
 	},
 	setting: {
@@ -159,6 +160,47 @@ const zhCN: BaseMessage = {
 		selectionHighlight: {
 			name: '选中项高亮',
 			desc: '设置选中项的颜色。',
+		},
+		particleEffect: {
+			name: '启用粒子特效',
+			desc: '将主页的 Logo 与标题渲染为可交互的粒子点阵，鼠标经过时产生涟漪效果（灵感来自明日方舟官网）',
+		},
+		particleEffectScope: {
+			name: '生效范围',
+			desc: '选择粒子特效作用的区域',
+			options: {
+				logoTitle: 'Logo + 标题',
+				logo: '仅 Logo',
+				title: '仅标题',
+			},
+		},
+		particleEffectMonochrome: {
+			name: '单色模式',
+			desc: '开启后所有粒子使用统一颜色；关闭时继承 Logo 与标题的原始颜色',
+		},
+		particleEffectColor: {
+			name: '粒子颜色',
+			desc: '单色模式下粒子的统一颜色',
+		},
+		particleEffectScale: {
+			name: '画布倍率',
+			desc: '粒子画布内容相对原 Logo 与标题区域的放大倍数',
+		},
+		particleEffectSpacing: {
+			name: '粒子间距',
+			desc: '采样点阵的间距，越小越密集',
+		},
+		particleEffectDotSize: {
+			name: '粒子大小',
+			desc: '单个粒子的半径',
+		},
+		particleEffectDisturbRadius: {
+			name: '扰动范围',
+			desc: '鼠标扰动作用的半径',
+		},
+		particleEffectDisturbStrength: {
+			name: '扰动力度',
+			desc: '鼠标推开粒子的强度',
 		},
 		debugMode: {
 			name: '调试模式',

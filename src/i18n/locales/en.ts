@@ -10,6 +10,7 @@ const en: BaseMessage = {
 		search: 'Search',
 		files: 'Files',
 		appearance: 'Appearance',
+		particleEffect: 'Particle effect',
 		developer: 'Developer',
 	},
 	setting: {
@@ -159,6 +160,47 @@ const en: BaseMessage = {
 		selectionHighlight: {
 			name: 'Selection highlight',
 			desc: 'Set the color of the selected item.',
+		},
+		particleEffect: {
+			name: 'Enable particle effect',
+			desc: 'Render the home tab logo and title as an interactive particle grid that ripples around the cursor (inspired by the Arknights website)',
+		},
+		particleEffectScope: {
+			name: 'Scope',
+			desc: 'Choose which parts are rendered as particles',
+			options: {
+				logoTitle: 'Logo + title',
+				logo: 'Logo only',
+				title: 'Title only',
+			},
+		},
+		particleEffectMonochrome: {
+			name: 'Monochrome',
+			desc: 'When enabled all particles use a single color; when disabled particles inherit the original colors of the logo and title',
+		},
+		particleEffectColor: {
+			name: 'Particle color',
+			desc: 'Color used by all particles in monochrome mode',
+		},
+		particleEffectScale: {
+			name: 'Canvas scale',
+			desc: 'How much the particle canvas content is enlarged relative to the original logo and title area',
+		},
+		particleEffectSpacing: {
+			name: 'Particle spacing',
+			desc: 'Distance between lattice sample points (lower = denser)',
+		},
+		particleEffectDotSize: {
+			name: 'Particle size',
+			desc: 'Radius of a single particle',
+		},
+		particleEffectDisturbRadius: {
+			name: 'Disturbance radius',
+			desc: 'Radius of the cursor disturbance area',
+		},
+		particleEffectDisturbStrength: {
+			name: 'Disturbance strength',
+			desc: 'How strongly the cursor pushes particles away',
 		},
 		debugMode: {
 			name: 'Debug mode',

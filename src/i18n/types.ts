@@ -21,6 +21,7 @@ export interface BaseMessage {
 		search: string
 		files: string
 		appearance: string
+		particleEffect: string
 		developer: string
 	}
 	setting: {
@@ -64,6 +65,15 @@ export interface BaseMessage {
 		fontWeight: SettingEntry
 		titleColor: SettingEntry
 		selectionHighlight: SettingEntry
+		particleEffect: SettingEntry
+		particleEffectScope: SettingEntry & { options: DropdownOptions }
+		particleEffectMonochrome: SettingEntry
+		particleEffectColor: SettingEntry
+		particleEffectScale: SettingEntry
+		particleEffectSpacing: SettingEntry
+		particleEffectDotSize: SettingEntry
+		particleEffectDisturbRadius: SettingEntry
+		particleEffectDisturbStrength: SettingEntry
 		debugMode: SettingEntry
 	}
 	common: {
