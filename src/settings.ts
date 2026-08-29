@@ -198,91 +198,110 @@ export class HomeTabSettingTab extends PluginSettingTab {
                 control: { type: 'toggle', key: 'closePreviousSessionTabs' },
             },
 
-            // Search
+            // Search — sub-page entry under its own heading
             {
                 type: 'group',
                 heading: t.group.search,
                 items: [
                     {
-                        name: t.setting.webUrlSuggestions.name,
-                        desc: t.setting.webUrlSuggestions.desc,
-                        visible: () => !!this.app.internalPlugins.getPluginById('webviewer') || !!this.app.internalPlugins.getPluginById('webbrowser'),
-                        control: { type: 'toggle', key: 'webUrlSuggestions' },
-                    },
-                    {
-                        name: t.setting.useOmnisearch.name,
-                        desc: t.setting.useOmnisearch.desc,
-                        visible: () => !!this.app.plugins.getPlugin('omnisearch'),
-                        control: { type: 'toggle', key: 'omnisearch' },
-                    },
-                    {
-                        name: t.setting.markdownOnly.name,
-                        visible: searchVisible,
-                        control: { type: 'toggle', key: 'markdownOnly' },
-                    },
-                    {
-                        name: t.setting.additionalExtensions.name,
-                        desc: t.setting.additionalExtensions.desc,
-                        visible: () => searchVisible() && s.markdownOnly,
-                        control: { type: 'text', key: 'additionalExtensions' },
-                    },
-                    {
-                        name: t.setting.unresolvedLinks.name,
-                        visible: searchVisible,
-                        control: { type: 'toggle', key: 'unresolvedLinks' },
-                    },
-                    {
-                        name: t.setting.searchTitle.name,
-                        desc: t.setting.searchTitle.desc,
-                        visible: searchVisible,
-                        control: { type: 'toggle', key: 'searchTitle' },
-                    },
-                    {
-                        name: t.setting.searchHeadings.name,
-                        desc: t.setting.searchHeadings.desc,
-                        visible: searchVisible,
-                        control: { type: 'toggle', key: 'searchHeadings' },
-                    },
-                    {
-                        name: t.setting.autoJumpToHeading.name,
-                        desc: t.setting.autoJumpToHeading.desc,
-                        visible: () => searchVisible() && s.searchHeadings,
-                        control: { type: 'toggle', key: 'autoJumpToHeading', defaultValue: true },
-                    },
-                    {
-                        name: t.setting.headingJumpStrategy.name,
-                        desc: t.setting.headingJumpStrategy.desc,
-                        visible: () => searchVisible() && s.searchHeadings && (s.autoJumpToHeading ?? true),
-                        control: {
-                            type: 'dropdown',
-                            key: 'headingJumpStrategy',
-                            defaultValue: 'smart',
-                            options: t.setting.headingJumpStrategy.options,
-                        },
-                    },
-                    {
-                        name: t.setting.showPath.name,
-                        desc: t.setting.showPath.desc,
-                        visible: searchVisible,
-                        control: { type: 'toggle', key: 'showPath' },
-                    },
-                    {
-                        name: t.setting.showShortcuts.name,
-                        desc: t.setting.showShortcuts.desc,
-                        control: { type: 'toggle', key: 'showShortcuts' },
-                    },
-                    this.sliderWithReset('maxResults', t.setting.maxResults.name, t.setting.maxResults.desc, 1, 25, 1),
-                    this.sliderWithReset('searchDelay', t.setting.searchDelay.name, t.setting.searchDelay.desc, 0, 500, 10, { refreshAfterChange: true }),
-                    {
-                        name: t.setting.hideOnBlur.name,
-                        desc: t.setting.hideOnBlur.desc,
-                        control: { type: 'toggle', key: 'hideOnBlur', defaultValue: true },
-                    },
-                    {
-                        name: t.setting.showOmnisearchExcerpt.name,
-                        desc: t.setting.showOmnisearchExcerpt.desc,
-                        visible: () => !!this.app.plugins.getPlugin('omnisearch'),
-                        control: { type: 'toggle', key: 'showOmnisearchExcerpt' },
+                        type: 'page',
+                        name: t.page.search.name,
+                        desc: t.page.search.desc,
+                        items: [
+                            {
+                                name: t.setting.useOmnisearch.name,
+                                desc: t.setting.useOmnisearch.desc,
+                                visible: () => !!this.app.plugins.getPlugin('omnisearch'),
+                                control: { type: 'toggle', key: 'omnisearch' },
+                            },
+                            {
+                                name: t.setting.markdownOnly.name,
+                                visible: searchVisible,
+                                control: { type: 'toggle', key: 'markdownOnly' },
+                            },
+                            {
+                                name: t.setting.additionalExtensions.name,
+                                desc: t.setting.additionalExtensions.desc,
+                                visible: () => searchVisible() && s.markdownOnly,
+                                control: { type: 'text', key: 'additionalExtensions' },
+                            },
+                            {
+                                name: t.setting.unresolvedLinks.name,
+                                visible: searchVisible,
+                                control: { type: 'toggle', key: 'unresolvedLinks' },
+                            },
+                            {
+                                name: t.setting.webUrlSuggestions.name,
+                                desc: t.setting.webUrlSuggestions.desc,
+                                visible: () => !!this.app.internalPlugins.getPluginById('webviewer') || !!this.app.internalPlugins.getPluginById('webbrowser'),
+                                control: { type: 'toggle', key: 'webUrlSuggestions' },
+                            },
+                            {
+                                name: t.setting.searchTitle.name,
+                                desc: t.setting.searchTitle.desc,
+                                visible: searchVisible,
+                                control: { type: 'toggle', key: 'searchTitle' },
+                            },
+                            {
+                                type: 'group',
+                                heading: t.group.headingJump,
+                                items: [
+                                    {
+                                        name: t.setting.searchHeadings.name,
+                                        desc: t.setting.searchHeadings.desc,
+                                        visible: searchVisible,
+                                        control: { type: 'toggle', key: 'searchHeadings' },
+                                    },
+                                    {
+                                        name: t.setting.autoJumpToHeading.name,
+                                        desc: t.setting.autoJumpToHeading.desc,
+                                        visible: () => searchVisible() && s.searchHeadings,
+                                        control: { type: 'toggle', key: 'autoJumpToHeading', defaultValue: true },
+                                    },
+                                    {
+                                        name: t.setting.headingJumpStrategy.name,
+                                        desc: t.setting.headingJumpStrategy.desc,
+                                        visible: () => searchVisible() && s.searchHeadings && (s.autoJumpToHeading ?? true),
+                                        control: {
+                                            type: 'dropdown',
+                                            key: 'headingJumpStrategy',
+                                            defaultValue: 'smart',
+                                            options: t.setting.headingJumpStrategy.options,
+                                        },
+                                    },
+                                ],
+                            },
+                            {
+                                type: 'group',
+                                heading: t.group.results,
+                                items: [
+                                    {
+                                        name: t.setting.showPath.name,
+                                        desc: t.setting.showPath.desc,
+                                        visible: searchVisible,
+                                        control: { type: 'toggle', key: 'showPath' },
+                                    },
+                                    {
+                                        name: t.setting.showShortcuts.name,
+                                        desc: t.setting.showShortcuts.desc,
+                                        control: { type: 'toggle', key: 'showShortcuts' },
+                                    },
+                                    this.sliderWithReset('maxResults', t.setting.maxResults.name, t.setting.maxResults.desc, 1, 25, 1),
+                                    this.sliderWithReset('searchDelay', t.setting.searchDelay.name, t.setting.searchDelay.desc, 0, 500, 10, { refreshAfterChange: true }),
+                                    {
+                                        name: t.setting.hideOnBlur.name,
+                                        desc: t.setting.hideOnBlur.desc,
+                                        control: { type: 'toggle', key: 'hideOnBlur', defaultValue: true },
+                                    },
+                                    {
+                                        name: t.setting.showOmnisearchExcerpt.name,
+                                        desc: t.setting.showOmnisearchExcerpt.desc,
+                                        visible: () => !!this.app.plugins.getPlugin('omnisearch'),
+                                        control: { type: 'toggle', key: 'showOmnisearchExcerpt' },
+                                    },
+                                ],
+                            },
+                        ],
                     },
                 ],
             },
@@ -329,82 +348,96 @@ export class HomeTabSettingTab extends PluginSettingTab {
                 ],
             },
 
-            // Appearance
+            // Appearance — two sub-pages under one heading
             {
                 type: 'group',
                 heading: t.group.appearance,
                 items: [
-                    this.dropdownWithReset('logoType', t.setting.logo.name, t.setting.logo.desc, t.setting.logo.options, { rebuildAfterChange: true }),
                     {
-                        name: t.setting.logoSource.name,
-                        visible: () => ['imagePath', 'imageLink', 'lucideIcon'].includes(s.logoType),
-                        render: (setting) => this.renderLogoSource(setting, t),
-                    },
-                    this.dropdownWithReset('iconColorType', t.setting.iconColor.name, t.setting.iconColor.desc, colorOptions(), {
-                        visible: () => s.logoType === 'lucideIcon',
-                    }),
-                    {
-                        name: t.setting.iconColor.name,
-                        desc: t.setting.iconColor.desc,
-                        visible: () => s.logoType === 'lucideIcon' && s.iconColorType === 'custom',
-                        control: { type: 'color', key: 'iconColor', defaultValue: '#000000' },
-                    },
-                    this.sliderWithReset('logoScale', t.setting.logoScale.name, t.setting.logoScale.desc, 0.3, 3, 0.1),
-                    {
-                        name: t.setting.title.name,
-                        render: (setting) => {
-                            setting.addText((text) => text
-                                .setValue(s.wordmark)
-                                .onChange((value) => {
-                                    s.wordmark = value
-                                    void this.plugin.saveSettings()
-                                }))
-                            this.addResetButton(setting, 'wordmark')
-                        },
-                    },
-                    this.dropdownWithReset('customFont', t.setting.titleFont.name, t.setting.titleFont.desc, t.setting.titleFont.options, { rebuildAfterChange: true }),
-                    {
-                        name: t.setting.customFontName.name,
-                        visible: () => s.customFont === 'custom',
-                        render: (setting) => this.renderCustomFontName(setting, t),
+                        type: 'page',
+                        name: t.page.logo.name,
+                        desc: t.page.logo.desc,
+                        items: [
+                            this.dropdownWithReset('logoType', t.setting.logo.name, t.setting.logo.desc, t.setting.logo.options, { rebuildAfterChange: true }),
+                            {
+                                name: t.setting.logoSource.name,
+                                visible: () => ['imagePath', 'imageLink', 'lucideIcon'].includes(s.logoType),
+                                render: (setting) => this.renderLogoSource(setting, t),
+                            },
+                            this.dropdownWithReset('iconColorType', t.setting.iconColor.name, t.setting.iconColor.desc, colorOptions(), {
+                                visible: () => s.logoType === 'lucideIcon',
+                            }),
+                            {
+                                name: t.setting.iconColor.name,
+                                desc: t.setting.iconColor.desc,
+                                visible: () => s.logoType === 'lucideIcon' && s.iconColorType === 'custom',
+                                control: { type: 'color', key: 'iconColor', defaultValue: '#000000' },
+                            },
+                            this.sliderWithReset('logoScale', t.setting.logoScale.name, t.setting.logoScale.desc, 0.3, 3, 0.1),
+                        ],
                     },
                     {
-                        name: t.setting.fontSize.name,
-                        desc: t.setting.fontSize.desc,
-                        render: (setting) => {
-                            let invalidFontSizeIcon: HTMLElement
-                            setting
-                                .addExtraButton((button) => {button
-                                    .setIcon('alert-circle')
-                                    .setTooltip(t.setting.fontSize.invalid)
-                                    invalidFontSizeIcon = button.extraSettingsEl
-                                    invalidFontSizeIcon.addClass('mod-warning')
-                                    invalidFontSizeIcon.toggleVisibility(false)
-                                })
-                                .addText((text) => text
-                                    .setValue(s.fontSize)
-                                    .onChange((value) => {
-                                        if(cssUnitValidator(value)){
-                                            s.fontSize = value
+                        type: 'page',
+                        name: t.page.titleStyle.name,
+                        desc: t.page.titleStyle.desc,
+                        items: [
+                            {
+                                name: t.setting.title.name,
+                                render: (setting) => {
+                                    setting.addText((text) => text
+                                        .setValue(s.wordmark)
+                                        .onChange((value) => {
+                                            s.wordmark = value
                                             void this.plugin.saveSettings()
+                                        }))
+                                    this.addResetButton(setting, 'wordmark')
+                                },
+                            },
+                            this.dropdownWithReset('customFont', t.setting.titleFont.name, t.setting.titleFont.desc, t.setting.titleFont.options, { rebuildAfterChange: true }),
+                            {
+                                name: t.setting.customFontName.name,
+                                visible: () => s.customFont === 'custom',
+                                render: (setting) => this.renderCustomFontName(setting, t),
+                            },
+                            {
+                                name: t.setting.fontSize.name,
+                                desc: t.setting.fontSize.desc,
+                                render: (setting) => {
+                                    let invalidFontSizeIcon: HTMLElement
+                                    setting
+                                        .addExtraButton((button) => {button
+                                            .setIcon('alert-circle')
+                                            .setTooltip(t.setting.fontSize.invalid)
+                                            invalidFontSizeIcon = button.extraSettingsEl
+                                            invalidFontSizeIcon.addClass('mod-warning')
                                             invalidFontSizeIcon.toggleVisibility(false)
-                                        }
-                                        else{
-                                            invalidFontSizeIcon.toggleVisibility(true)
-                                        }
-                                    }))
-                            this.addResetButton(setting, 'fontSize')
-                        },
+                                        })
+                                        .addText((text) => text
+                                            .setValue(s.fontSize)
+                                            .onChange((value) => {
+                                                if(cssUnitValidator(value)){
+                                                    s.fontSize = value
+                                                    void this.plugin.saveSettings()
+                                                    invalidFontSizeIcon.toggleVisibility(false)
+                                                }
+                                                else{
+                                                    invalidFontSizeIcon.toggleVisibility(true)
+                                                }
+                                            }))
+                                    this.addResetButton(setting, 'fontSize')
+                                },
+                            },
+                            this.sliderWithReset('fontWeight', t.setting.fontWeight.name, t.setting.fontWeight.desc, 100, 900, 100),
+                            this.dropdownWithReset('fontColorType', t.setting.titleColor.name, undefined, colorOptions()),
+                            {
+                                name: t.setting.titleColor.name,
+                                visible: () => s.fontColorType === 'custom',
+                                control: { type: 'color', key: 'fontColor', defaultValue: '#000000' },
+                            },
+                            this.dropdownWithReset('selectionHighlight', t.setting.selectionHighlight.name, t.setting.selectionHighlight.desc,
+                                { default: t.common.themeDefault, accentColor: t.common.accentColor }, { refreshAfterChange: true }),
+                        ],
                     },
-                    this.sliderWithReset('fontWeight', t.setting.fontWeight.name, t.setting.fontWeight.desc, 100, 900, 100),
-                    this.dropdownWithReset('fontColorType', t.setting.titleColor.name, undefined, colorOptions()),
-                    {
-                        name: t.setting.titleColor.name,
-                        visible: () => s.fontColorType === 'custom',
-                        control: { type: 'color', key: 'fontColor', defaultValue: '#000000' },
-                    },
-                    this.dropdownWithReset('selectionHighlight', t.setting.selectionHighlight.name, t.setting.selectionHighlight.desc,
-                        { default: t.common.themeDefault, accentColor: t.common.accentColor }, { refreshAfterChange: true }),
                 ],
             },
 

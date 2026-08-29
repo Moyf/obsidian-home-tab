@@ -12,6 +12,13 @@ const en: BaseMessage = {
 		appearance: 'Appearance',
 		particleEffect: 'Particle effect',
 		developer: 'Developer',
+		headingJump: 'Heading navigation',
+		results: 'Results display',
+	},
+	page: {
+		search: { name: 'Search', desc: 'Search behavior, result display, and heading navigation.' },
+		logo: { name: 'Logo', desc: 'Logo type, source, color, and size.' },
+		titleStyle: { name: 'Title style', desc: 'Title text, font, size, weight, and color.' },
 	},
 	setting: {
 		replaceNewTabs: {
@@ -35,6 +42,7 @@ const en: BaseMessage = {
 		},
 		markdownOnly: {
 			name: 'Search only markdown files',
+			desc: 'When enabled, search results only include markdown notes and no longer match attachments.',
 		},
 		additionalExtensions: {
 			name: 'Additional extensions to search',
@@ -42,6 +50,7 @@ const en: BaseMessage = {
 		},
 		unresolvedLinks: {
 			name: 'Show uncreated files',
+			desc: 'Show links to files that have not been created yet in the search results.',
 		},
 		searchTitle: {
 			name: 'Search file titles',

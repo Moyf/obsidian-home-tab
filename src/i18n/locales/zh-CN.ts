@@ -12,6 +12,13 @@ const zhCN: BaseMessage = {
 		appearance: '外观',
 		particleEffect: '粒子特效',
 		developer: '开发者',
+		headingJump: '标题跳转',
+		results: '结果显示',
+	},
+	page: {
+		search: { name: '搜索', desc: '搜索行为、结果显示与标题跳转' },
+		logo: { name: 'Logo', desc: 'Logo 图标、来源、颜色与尺寸' },
+		titleStyle: { name: '标题样式', desc: '标题文本、字体、字号、字重与颜色' },
 	},
 	setting: {
 		replaceNewTabs: {
@@ -35,6 +42,7 @@ const zhCN: BaseMessage = {
 		},
 		markdownOnly: {
 			name: '仅搜索 Markdown 文件',
+			desc: '开启后搜索结果仅包含 Markdown 笔记，不再匹配附件。',
 		},
 		additionalExtensions: {
 			name: '额外搜索的扩展名',
@@ -42,6 +50,7 @@ const zhCN: BaseMessage = {
 		},
 		unresolvedLinks: {
 			name: '显示未创建的文件',
+			desc: '在搜索结果中显示指向尚未创建的文件的链接。',
 		},
 		searchTitle: {
 			name: '搜索文件标题',
