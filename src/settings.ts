@@ -381,12 +381,13 @@ export class HomeTabSettingTab extends PluginSettingTab {
                                 heading: t.group.logoLayout,
                                 items: [
                                     {
+                                        // Placement applies to every rendered logo (including the built-in ones)
                                         ...this.dropdownWithReset('logoPosition', t.setting.logoPosition.name, t.setting.logoPosition.desc, t.setting.logoPosition.options),
-                                        visible: () => s.logoType !== 'none' && s.logoType !== 'default',
+                                        visible: () => s.logoType !== 'none',
                                     },
                                     {
                                         ...this.sliderWithReset('logoMargin', t.setting.logoMargin.name, t.setting.logoMargin.desc, 0, 50, 1),
-                                        visible: () => s.logoType !== 'none' && s.logoType !== 'default',
+                                        visible: () => s.logoType !== 'none',
                                     },
                                     this.sliderWithReset('logoScale', t.setting.logoScale.name, t.setting.logoScale.desc, 0.3, 3, 0.1),
                                 ],
