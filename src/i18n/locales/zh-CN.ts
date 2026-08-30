@@ -13,6 +13,7 @@ const zhCN: BaseMessage = {
 		developer: '开发者',
 		headingJump: '标题跳转',
 		results: '结果显示',
+		logoLayout: 'Logo 布局',
 		particleStyle: '样式',
 		particleCanvas: '画布',
 		particleInteraction: '交互',
@@ -20,7 +21,7 @@ const zhCN: BaseMessage = {
 	page: {
 		search: { name: '搜索', desc: '搜索行为、结果显示与标题跳转' },
 		logo: { name: 'Logo', desc: 'Logo 图标、来源、颜色与尺寸' },
-		titleStyle: { name: '标题样式', desc: '标题文本、字体、字号、字重与颜色' },
+  titleStyle: { name: '标题', desc: '标题文本、字体、字号、字重与颜色' },
 		particleEffect: { name: '粒子特效', desc: 'Logo 与标题的交互式粒子渲染' },
 	},
 	setting: {
@@ -136,6 +137,20 @@ const zhCN: BaseMessage = {
 		iconColor: {
 			name: 'Logo 图标颜色',
 			desc: '设置图标颜色',
+		},
+		logoPosition: {
+			name: 'Logo 位置',
+			desc: '设置 Logo 相对于标题的摆放位置。',
+			options: {
+				top: '上方',
+				bottom: '下方',
+				left: '左侧',
+				right: '右侧',
+			},
+		},
+		logoMargin: {
+			name: 'Logo 边距',
+			desc: '设置 Logo 四周留出的间距（像素）。',
 		},
 		logoScale: {
 			name: 'Logo 缩放',

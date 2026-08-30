@@ -13,6 +13,7 @@ const en: BaseMessage = {
 		developer: 'Developer',
 		headingJump: 'Heading navigation',
 		results: 'Results display',
+		logoLayout: 'Logo layout',
 		particleStyle: 'Style',
 		particleCanvas: 'Canvas',
 		particleInteraction: 'Interaction',
@@ -20,7 +21,7 @@ const en: BaseMessage = {
 	page: {
 		search: { name: 'Search', desc: 'Search behavior, result display, and heading navigation.' },
 		logo: { name: 'Logo', desc: 'Logo type, source, color, and size.' },
-		titleStyle: { name: 'Title style', desc: 'Title text, font, size, weight, and color.' },
+  titleStyle: { name: 'Title', desc: 'Title text, font, size, weight, and color.' },
 		particleEffect: { name: 'Particle effect', desc: 'Interactive particle rendering for the logo and title.' },
 	},
 	setting: {
@@ -136,6 +137,20 @@ const en: BaseMessage = {
 		iconColor: {
 			name: 'Logo icon color',
 			desc: 'Set the icon color',
+		},
+		logoPosition: {
+			name: 'Logo position',
+			desc: 'Set where the logo is placed relative to the title.',
+			options: {
+				top: 'Top',
+				bottom: 'Bottom',
+				left: 'Left',
+				right: 'Right',
+			},
+		},
+		logoMargin: {
+			name: 'Logo margin',
+			desc: 'Set the spacing around the logo, in pixels.',
 		},
 		logoScale: {
 			name: 'Logo scale',

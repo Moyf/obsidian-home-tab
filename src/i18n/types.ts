@@ -24,6 +24,7 @@ export interface BaseMessage {
 		developer: string
 		headingJump: string
 		results: string
+		logoLayout: string
 		particleStyle: string
 		particleCanvas: string
 		particleInteraction: string
@@ -64,6 +65,8 @@ export interface BaseMessage {
 		}
 		logoSource: SettingEntry
 		iconColor: SettingEntry
+		logoPosition: SettingEntry & { options: DropdownOptions }
+		logoMargin: SettingEntry
 		logoScale: SettingEntry
 		title: SettingEntry
 		titleFont: SettingEntry & {
