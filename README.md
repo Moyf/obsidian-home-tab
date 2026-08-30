@@ -15,7 +15,7 @@ This plugin is not meant to be a replacement for the default Quick switcher or a
 ## What's new
 Compared to the original Home tab, this fork continues development with:
 
-- **Particle wordmark** — render the logo and title as an interactive particle grid that ripples around the cursor, with a monochrome mode and tunable canvas parameters
+- **Particle wordmark** — render the logo and title as an interactive particle grid that ripples around the cursor, with a monochrome mode, ambient idle-motion modes (wave, float, staggered float, heartbeat, ripple, breathe) and tunable canvas parameters
 - **Heading search & jump** — search through document headings and automatically jump to the matched one, with a smart jump strategy
 - **Web link suggestions** — detect web addresses typed in the search bar and offer to open them with the Web Viewer core plugin
 - **Localization** — English and Simplified Chinese

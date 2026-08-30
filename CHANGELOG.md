@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.0] - 2026-08-31
+
+### Features
+
+- Add an "Idle motion" dropdown to the particle effect with six ambient movement modes for the resting wordmark: **Wave rhythm** (a diagonal wave sweeping across the title), **Gentle float** (the whole wordmark bobbing together), **Staggered float** (a standing wave where neighbouring regions rise and fall out of phase), **Heartbeat** (a lub-dub pulse radiating from the center outward, with the amplitude growing toward the rim), **Ripple** (ring-shaped waves spreading from the center) and **Breathe** (a slow uniform radial expansion). All modes are disabled by default ("None") and run at draw time only — the cursor-ripple physics stays untouched, sine lookups use a precomputed table, and "None" keeps the original code path
+
 ## [1.3.2] - 2026-08-30
 
 ### Features
