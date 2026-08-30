@@ -55,7 +55,7 @@
     async function createEngine(): Promise<void> {
         if (!rootEl || !settings) return
         reserveLayout()
-        engine = new ParticleWordmarkEngine(rootEl, {
+        const next = new ParticleWordmarkEngine(rootEl, {
             monochrome: settings.particleEffectMonochrome,
             color: settings.particleEffectColor,
             zoom: settings.particleEffectScale,
@@ -64,36 +64,49 @@
             repulsionRadius: settings.particleEffectDisturbRadius,
             repulsionStrength: settings.particleEffectDisturbStrength,
         })
+        engine = next
         loading = true
-        const tookOver = await engine.build()
+        const tookOver = await next.build()
         loading = false
+        // A newer rebuild superseded this one (shared `engine` moved on):
+        // leave the current engine alone instead of tearing it down.
+        if (engine !== next) return
         console.log(`[home-tab] particle: engine built, tookOver=${tookOver}`)
         if (!tookOver) {
             releaseLayout()
-            engine.destroy()
+            next.destroy()
             engine = null
         }
+    }
+
+    /** Destroys the engine and rebuilds it with the current settings. */
+    function rebuildEngine(): void {
+        rebuildTimer = undefined
+        destroyEngine()
+        void createEngine()
     }
 
     /**
      * Debounced destroy + recreate, so dragging the color picker or switching
      * dropdowns doesn't thrash the engine. The first run builds immediately.
      * A circuit breaker pauses auto-rebuilds when something triggers them in
-     * a tight loop.
+     * a tight loop; the pending rebuild is retried after a cooldown instead
+     * of being dropped, so the last settings state is never lost.
      */
     function scheduleRebuild(): void {
         if (!rootEl || !settings) return
-        const now = Date.now()
-        rebuildTimestamps = rebuildTimestamps.filter((time) => now - time < 3000)
-        rebuildTimestamps.push(now)
-        if (rebuildTimestamps.length > 5) {
-            console.warn('[home-tab] particle: rebuild loop detected; auto-rebuild paused.')
-            return
-        }
         window.clearTimeout(rebuildTimer)
         if (!settings.particleEffect) {
             destroyEngine()
             hasBuilt = true
+            return
+        }
+        const now = Date.now()
+        rebuildTimestamps = rebuildTimestamps.filter((time) => now - time < 3000)
+        rebuildTimestamps.push(now)
+        if (rebuildTimestamps.length > 5) {
+            console.warn('[home-tab] particle: rebuild loop detected; retrying after a 3s cooldown.')
+            rebuildTimer = window.setTimeout(rebuildEngine, 3000)
             return
         }
         if (!hasBuilt) {
@@ -101,11 +114,7 @@
             void createEngine()
             return
         }
-        rebuildTimer = window.setTimeout(() => {
-            rebuildTimer = undefined
-            destroyEngine()
-            void createEngine()
-        }, 250)
+        rebuildTimer = window.setTimeout(rebuildEngine, 250)
     }
 
     /** Everything the engine or the rasterized source rendering depends on. */
@@ -123,6 +132,14 @@
             JSON.stringify(s.logo),
             s.iconColorType,
             s.iconColor,
+            s.logoPosition,
+            s.logoScale,
+            s.logoMargin,
+            s.logoMarginIndividual,
+            s.logoMarginTop,
+            s.logoMarginRight,
+            s.logoMarginBottom,
+            s.logoMarginLeft,
             s.wordmark,
             s.customFont,
             s.font,
