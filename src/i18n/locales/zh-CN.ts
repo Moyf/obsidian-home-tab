@@ -241,6 +241,19 @@ const zhCN: BaseMessage = {
 			name: '扰动力度',
 			desc: '鼠标推开粒子的强度',
 		},
+		particleEffectAmbientMotion: {
+			name: '默认运动',
+			desc: '粒子静止时的漂浮效果',
+			options: {
+				none: '无',
+				wave: '波浪节奏',
+				float: '整体浮动',
+				undulate: '错落浮动',
+				pulse: '心跳',
+				ripple: '涟漪',
+				breathe: '呼吸',
+			},
+		},
 		debugMode: {
 			name: '调试模式',
 			desc: '启用搜索结果与匹配分析的调试日志。详情请查看开发者控制台。',

@@ -63,6 +63,7 @@
             dotSize: settings.particleEffectDotSize,
             repulsionRadius: settings.particleEffectDisturbRadius,
             repulsionStrength: settings.particleEffectDisturbStrength,
+            ambientMotion: settings.particleEffectAmbientMotion ?? 'none',
         })
         engine = next
         loading = true
@@ -123,6 +124,7 @@
             s.particleEffect,
             s.particleEffectMonochrome,
             s.particleEffectColor,
+            s.particleEffectAmbientMotion,
             s.particleEffectScale,
             s.particleEffectSpacing,
             s.particleEffectDotSize,

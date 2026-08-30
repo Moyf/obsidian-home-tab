@@ -50,6 +50,7 @@ export interface HomeTabSettings extends ObjectKeys{
     particleEffect: boolean
     particleEffectMonochrome: boolean
     particleEffectColor: string
+    particleEffectAmbientMotion?: 'none' | 'wave' | 'float' | 'undulate' | 'pulse' | 'ripple' | 'breathe' // 新增：粒子的默认漂浮运动模式
     particleEffectScale: number
     particleEffectSpacing: number
     particleEffectDotSize: number
@@ -106,6 +107,7 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     particleEffect: false,
     particleEffectMonochrome: false,
     particleEffectColor: '#6C31E3',
+    particleEffectAmbientMotion: 'none', // 新增：默认无漂浮运动
     particleEffectScale: 1.9,
     particleEffectSpacing: 2,
     particleEffectDotSize: 0.5,
@@ -541,6 +543,9 @@ export class HomeTabSettingTab extends PluginSettingTab {
                                             this.addResetButton(setting, 'particleEffectColor')
                                         },
                                     },
+                                    this.dropdownWithReset('particleEffectAmbientMotion', t.setting.particleEffectAmbientMotion.name, t.setting.particleEffectAmbientMotion.desc, t.setting.particleEffectAmbientMotion.options, {
+                                        visible: () => s.particleEffect,
+                                    }),
                                 ],
                             },
                             {

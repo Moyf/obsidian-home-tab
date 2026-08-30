@@ -22,7 +22,11 @@ export interface ParticleWordmarkOptions {
     repulsionRadius: number
     /** How strongly the cursor pushes particles away. */
     repulsionStrength: number
+    /** Idle motion applied on top of the physics, computed at draw time only. */
+    ambientMotion: AmbientMotion
 }
+
+export type AmbientMotion = 'none' | 'wave' | 'float' | 'undulate' | 'pulse' | 'ripple' | 'breathe'
 
 interface Particle {
     x: number
@@ -62,12 +66,69 @@ const LUMA_REFERENCE = 128 // sampled luminance that maps to the base color as-i
 const SHADE_MIN = 0.6 // darkest shade factor in monochrome mode
 const SHADE_MAX = 1.4 // brightest shade factor in monochrome mode
 
+// Ambient (idle) motion. The offsets are applied at draw time only: the
+// physics in step() stays untouched, so cursor ripples keep behaving exactly
+// as before and 'none' costs nothing beyond an untouched branch. Whole-image
+// modes (float/pulse/breathe) evaluate their shape once per frame; only wave
+// and ripple do per-particle work (one table lookup each).
+const AMBIENT_AMPLITUDE = 1.6 // CSS px, peak per-particle offset of wave/ripple
+const WAVE_SPEED = 2.4 // rad/s: wave cycle of ~2.6s
+const WAVE_NUMBER = 0.045 // rad per CSS px: spatial wavelength of ~140px, so a few crests sweep across the wordmark diagonally
+const FLOAT_SPEED = 1.4 // rad/s: float cycle of ~4.5s
+const FLOAT_AMPLITUDE = 2.4 // CSS px, whole-wordmark vertical bob
+const UNDULATE_SPEED = 1.6 // rad/s: undulate cycle of ~3.9s
+const UNDULATE_NUMBER = 0.026 // rad per CSS px: standing-wave envelope wavelength of ~240px along x
+const UNDULATE_AMPLITUDE = 2.0 // CSS px, peak vertical excursion of an antinode
+const HEARTBEAT_SPEED = 5.2 // rad/s: heartbeat cycle of ~1.2s (~50 bpm)
+const HEARTBEAT_LAG = 0.9 // rad between the "lub" and the "dub" peaks
+const HEARTBEAT_SECOND_BEAT = 0.55 // relative height of the "dub"
+const HEARTBEAT_NUMBER = 0.008 // rad per CSS px: the beat travels ~650px/s, so it visibly radiates outward layer by layer
+const HEARTBEAT_SCALE_INNER = 0.004 // radial stretch near the center (smallest)
+const HEARTBEAT_SCALE_OUTER = 0.018 // radial stretch at the rim (largest)
+const BREATHE_SPEED = 1.1 // rad/s: breathe cycle of ~5.7s
+const BREATHE_SCALE = 0.015 // peak radial expansion (1.5%)
+const RIPPLE_SPEED = 3.0 // rad/s: ripple phase drift
+const RIPPLE_NUMBER = 0.05 // rad per CSS px: ring wavelength of ~125px
+const RIPPLE_AMPLITUDE = 1.4 // CSS px, radial excursion of a ring crest
+
+// Sine lookup table: idle motion replaces up-to-15k Math.sin calls per frame
+// with one array lookup each. Bitwise masking below also folds negative or
+// multi-turn phases into range for free.
+const SIN_LUT_BITS = 10
+const SIN_LUT_SIZE = 1 << SIN_LUT_BITS
+const SIN_LUT_SCALE = SIN_LUT_SIZE / (Math.PI * 2)
+const SIN_LUT = (() => {
+    const table = new Float32Array(SIN_LUT_SIZE)
+    for (let i = 0; i < SIN_LUT_SIZE; i++) table[i] = Math.sin((i / SIN_LUT_SIZE) * Math.PI * 2)
+    return table
+})()
+
+/** Table sine; the mask keeps the index in [0, SIN_LUT_SIZE) for any finite phase. */
+function lutSin(phase: number): number {
+    return SIN_LUT[(phase * SIN_LUT_SCALE) & (SIN_LUT_SIZE - 1)]
+}
+
+/**
+ * "Lub-dub" heartbeat shape: two unequal sharp peaks per cycle with a quiet
+ * gap between beats (a plain sine reads as swinging, not beating). sin^6
+ * clamps each half-wave into one narrow bump; the lagged, weaker second bump
+ * is the "dub". Evaluated once per frame, so the six multiplies are free.
+ */
+function heartbeatShape(phase: number): number {
+    const a = lutSin(phase)
+    const b = lutSin(phase - HEARTBEAT_LAG)
+    const lub = a > 0 ? a * a * a * a * a * a : 0
+    const dub = b > 0 ? b * b * b * b * b * b : 0
+    return lub + HEARTBEAT_SECOND_BEAT * dub
+}
+
 export class ParticleWordmarkEngine {
     private readonly container: HTMLElement
     private readonly options: ParticleWordmarkOptions
     private readonly repulsionRadius: number
     private readonly repulsionStrength: number
     private readonly zoom: number
+    private readonly ambientMotion: AmbientMotion
 
     private particles: Particle[] = []
     private canvas: HTMLCanvasElement | null = null
@@ -147,6 +208,7 @@ export class ParticleWordmarkEngine {
         this.repulsionRadius = options.repulsionRadius * ('ontouchstart' in (container.ownerDocument.defaultView ?? window) ? TOUCH_REPULSION_FACTOR : 1)
         this.repulsionStrength = options.repulsionStrength
         this.zoom = Math.min(Math.max(options.zoom, 1), MAX_ZOOM)
+        this.ambientMotion = options.ambientMotion ?? 'none'
     }
 
     /**
@@ -600,13 +662,163 @@ export class ParticleWordmarkEngine {
         const context = this.renderContext
         if (!context) return
         context.clearRect(0, 0, this.cssWidth, this.cssHeight)
+        const particles = this.particles
+        const motion = this.ambientMotion
+        if (motion === 'none') {
+            this.renderStatic(context, particles)
+            return
+        }
+        // Real time (not a frame counter) so the pace is identical on 60Hz and 120Hz+ displays.
+        const time = (this.container.ownerDocument.defaultView ?? window).performance.now() * 0.001
+        if (motion === 'wave') this.renderWave(context, particles, time)
+        else if (motion === 'float') this.renderFloat(context, particles, time)
+        else if (motion === 'undulate') this.renderUndulate(context, particles, time)
+        else if (motion === 'pulse') this.renderHeartbeat(context, particles, time)
+        else if (motion === 'breathe') this.renderRadialScale(context, particles, 1 + BREATHE_SCALE * lutSin(time * BREATHE_SPEED))
+        else if (motion === 'ripple') this.renderRipple(context, particles, time)
+        else this.renderStatic(context, particles) // stale setting values (removed modes) fall back safely
+    }
+
+    /** The original draw path, kept verbatim for the 'none' mode. */
+    private renderStatic(context: CanvasRenderingContext2D, particles: Particle[]): void {
         let lastFill = ''
-        for (const particle of this.particles) {
+        for (const particle of particles) {
             if (particle.fill !== lastFill) {
                 context.fillStyle = particle.fill
                 lastFill = particle.fill
             }
             context.fillRect(particle.x - particle.radius, particle.y - particle.radius, particle.radius * 2, particle.radius * 2)
+        }
+    }
+
+    /**
+     * Coordinated ripple: the phase comes from each particle's home position,
+     * so crests sweep across the wordmark diagonally — no per-particle data.
+     */
+    private renderWave(context: CanvasRenderingContext2D, particles: Particle[], time: number): void {
+        let lastFill = ''
+        for (let i = 0; i < particles.length; i++) {
+            const particle = particles[i]
+            if (particle.fill !== lastFill) {
+                context.fillStyle = particle.fill
+                lastFill = particle.fill
+            }
+            const y = particle.y + lutSin(time * WAVE_SPEED + (particle.hx + particle.hy) * WAVE_NUMBER) * AMBIENT_AMPLITUDE
+            context.fillRect(particle.x - particle.radius, y - particle.radius, particle.radius * 2, particle.radius * 2)
+        }
+    }
+
+    /** The whole wordmark bobs up and down together: one sine per frame, one add per particle. */
+    private renderFloat(context: CanvasRenderingContext2D, particles: Particle[], time: number): void {
+        const dy = lutSin(time * FLOAT_SPEED) * FLOAT_AMPLITUDE
+        let lastFill = ''
+        for (let i = 0; i < particles.length; i++) {
+            const particle = particles[i]
+            if (particle.fill !== lastFill) {
+                context.fillStyle = particle.fill
+                lastFill = particle.fill
+            }
+            const y = particle.y + dy
+            context.fillRect(particle.x - particle.radius, y - particle.radius, particle.radius * 2, particle.radius * 2)
+        }
+    }
+
+    /**
+     * Staggered float (standing wave): every particle bobs on the same clock,
+     * but the spatial envelope cos(k·hx) alternates sign along x, so one
+     * region rises while its neighbour falls and nodes stay still — staggered
+     * motion with no traveling crest. One global sine per frame; one table
+     * lookup per particle, no per-particle data.
+     */
+    private renderUndulate(context: CanvasRenderingContext2D, particles: Particle[], time: number): void {
+        const clock = lutSin(time * UNDULATE_SPEED) * UNDULATE_AMPLITUDE
+        let lastFill = ''
+        for (let i = 0; i < particles.length; i++) {
+            const particle = particles[i]
+            if (particle.fill !== lastFill) {
+                context.fillStyle = particle.fill
+                lastFill = particle.fill
+            }
+            const y = particle.y + clock * lutSin(particle.hx * UNDULATE_NUMBER + Math.PI / 2)
+            context.fillRect(particle.x - particle.radius, y - particle.radius, particle.radius * 2, particle.radius * 2)
+        }
+    }
+
+    /** Shared radial breathing (breathe): the scale is computed once per frame. */
+    private renderRadialScale(context: CanvasRenderingContext2D, particles: Particle[], scale: number): void {
+        // The canvas content is centered, so the canvas center doubles as the expansion origin.
+        const centerX = this.cssWidth / 2
+        const centerY = this.cssHeight / 2
+        const stretch = scale - 1
+        let lastFill = ''
+        for (let i = 0; i < particles.length; i++) {
+            const particle = particles[i]
+            if (particle.fill !== lastFill) {
+                context.fillStyle = particle.fill
+                lastFill = particle.fill
+            }
+            const x = particle.x + (particle.x - centerX) * stretch
+            const y = particle.y + (particle.y - centerY) * stretch
+            context.fillRect(x - particle.radius, y - particle.radius, particle.radius * 2, particle.radius * 2)
+        }
+    }
+
+    /**
+     * Heartbeat as an outward-traveling pulse: the lub-dub fires at the center
+     * first and reaches outer particles later (phase lag grows with distance),
+     * while the stroke amplitude ramps up from the inner scale at the center to
+     * the outer scale at the rim — the beat visibly propagates layer by layer
+     * instead of scaling the whole wordmark rigidly. Center particles need no
+     * special case: their (x−center) factors shrink the offset to zero anyway.
+     */
+    private renderHeartbeat(context: CanvasRenderingContext2D, particles: Particle[], time: number): void {
+        const centerX = this.cssWidth / 2
+        const centerY = this.cssHeight / 2
+        // Reference radius: the widest half-span, so particles at the rim of the
+        // (mostly horizontal) wordmark sit near the outer scale.
+        const maxDistance = Math.max(centerX, centerY)
+        const gain = HEARTBEAT_SCALE_OUTER - HEARTBEAT_SCALE_INNER
+        let lastFill = ''
+        for (let i = 0; i < particles.length; i++) {
+            const particle = particles[i]
+            if (particle.fill !== lastFill) {
+                context.fillStyle = particle.fill
+                lastFill = particle.fill
+            }
+            const dx = particle.x - centerX
+            const dy = particle.y - centerY
+            const distance = Math.sqrt(dx * dx + dy * dy)
+            const envelope = HEARTBEAT_SCALE_INNER + (distance / maxDistance) * gain
+            const stretch = heartbeatShape(time * HEARTBEAT_SPEED - distance * HEARTBEAT_NUMBER) * envelope
+            const x = particle.x + dx * stretch
+            const y = particle.y + dy * stretch
+            context.fillRect(x - particle.radius, y - particle.radius, particle.radius * 2, particle.radius * 2)
+        }
+    }
+
+    /** Ring-shaped wave spreading from the canvas center; particles rise and fall radially. */
+    private renderRipple(context: CanvasRenderingContext2D, particles: Particle[], time: number): void {
+        const centerX = this.cssWidth / 2
+        const centerY = this.cssHeight / 2
+        let lastFill = ''
+        for (let i = 0; i < particles.length; i++) {
+            const particle = particles[i]
+            if (particle.fill !== lastFill) {
+                context.fillStyle = particle.fill
+                lastFill = particle.fill
+            }
+            const dx = particle.x - centerX
+            const dy = particle.y - centerY
+            const distance = Math.sqrt(dx * dx + dy * dy)
+            const offset = lutSin(time * RIPPLE_SPEED - distance * RIPPLE_NUMBER) * RIPPLE_AMPLITUDE
+            if (distance > 0.001) {
+                const ratio = offset / distance
+                const x = particle.x + dx * ratio
+                const y = particle.y + dy * ratio
+                context.fillRect(x - particle.radius, y - particle.radius, particle.radius * 2, particle.radius * 2)
+            } else {
+                context.fillRect(particle.x - particle.radius, particle.y - particle.radius, particle.radius * 2, particle.radius * 2)
+            }
         }
     }
 }

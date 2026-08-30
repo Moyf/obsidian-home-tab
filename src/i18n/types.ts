@@ -92,6 +92,7 @@ export interface BaseMessage {
 		particleEffectDotSize: SettingEntry
 		particleEffectDisturbRadius: SettingEntry
 		particleEffectDisturbStrength: SettingEntry
+		particleEffectAmbientMotion: SettingEntry & { options: DropdownOptions }
 		debugMode: SettingEntry
 	}
 	common: {

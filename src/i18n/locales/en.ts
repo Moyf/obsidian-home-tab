@@ -241,6 +241,19 @@ const en: BaseMessage = {
 			name: 'Disturbance strength',
 			desc: 'How strongly the cursor pushes particles away',
 		},
+		particleEffectAmbientMotion: {
+			name: 'Idle motion',
+			desc: 'Gentle floating movement while the particles rest',
+			options: {
+				none: 'None',
+				wave: 'Wave rhythm',
+				float: 'Gentle float',
+				undulate: 'Staggered float',
+				pulse: 'Heartbeat',
+				ripple: 'Ripple',
+				breathe: 'Breathe',
+			},
+		},
 		debugMode: {
 			name: 'Debug mode',
 			desc: 'Enable debug logging for search results and match analysis. Check the developer console for detailed information.',
