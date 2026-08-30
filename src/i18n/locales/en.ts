@@ -22,6 +22,7 @@ const en: BaseMessage = {
 		search: { name: 'Search', desc: 'Search behavior, result display, and heading navigation.' },
 		logo: { name: 'Logo', desc: 'Logo type, source, color, and size.' },
   titleStyle: { name: 'Title', desc: 'Title text, font, size, weight, and color.' },
+		selectionHighlight: { name: 'Selection highlight', desc: 'How the selected file items are highlighted.' },
 		particleEffect: { name: 'Particle effect', desc: 'Interactive particle rendering for the logo and title.' },
 	},
 	setting: {

@@ -33,6 +33,7 @@ export interface BaseMessage {
 		search: SettingEntry
 		logo: SettingEntry
 		titleStyle: SettingEntry
+		selectionHighlight: SettingEntry
 		particleEffect: SettingEntry
 	}
 	setting: {
