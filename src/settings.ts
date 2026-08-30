@@ -14,6 +14,7 @@ import { t as getLocale } from './i18n'
 
 type ColorChoices = 'default' | 'accentColor' | 'custom'
 type LogoChoices = 'default' | 'imagePath' | 'imageLink' | 'lucideIcon' | 'oldLogo' | 'none'
+type LogoPosition = 'top' | 'bottom' | 'left' | 'right'
 type FontChoices = 'interfaceFont' | 'textFont' | 'monospaceFont' | 'custom'
 
 interface ObjectKeys {
@@ -29,6 +30,8 @@ interface logoStore extends ObjectKeys{
 export interface HomeTabSettings extends ObjectKeys{
     logoType: LogoChoices
     logo: logoStore
+    logoPosition: LogoPosition
+    logoMargin: number
     logoScale: number
     iconColor?: string
     iconColorType: ColorChoices
@@ -81,6 +84,8 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
         lucideIcon: '', 
         imagePath: '', 
         imageLink: '',},
+    logoPosition: 'left',
+    logoMargin: 12,
     logoScale: 1.2,
     iconColorType: 'default',
     wordmark: 'Obsidian',
@@ -371,7 +376,21 @@ export class HomeTabSettingTab extends PluginSettingTab {
                                 visible: () => s.logoType === 'lucideIcon' && s.iconColorType === 'custom',
                                 control: { type: 'color', key: 'iconColor', defaultValue: '#000000' },
                             },
-                            this.sliderWithReset('logoScale', t.setting.logoScale.name, t.setting.logoScale.desc, 0.3, 3, 0.1),
+                            {
+                                type: 'group',
+                                heading: t.group.logoLayout,
+                                items: [
+                                    {
+                                        ...this.dropdownWithReset('logoPosition', t.setting.logoPosition.name, t.setting.logoPosition.desc, t.setting.logoPosition.options),
+                                        visible: () => s.logoType !== 'none' && s.logoType !== 'default',
+                                    },
+                                    {
+                                        ...this.sliderWithReset('logoMargin', t.setting.logoMargin.name, t.setting.logoMargin.desc, 0, 50, 1),
+                                        visible: () => s.logoType !== 'none' && s.logoType !== 'default',
+                                    },
+                                    this.sliderWithReset('logoScale', t.setting.logoScale.name, t.setting.logoScale.desc, 0.3, 3, 0.1),
+                                ],
+                            },
                         ],
                     },
                     {

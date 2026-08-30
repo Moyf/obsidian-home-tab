@@ -42,14 +42,20 @@
     const renderRecentFiles: boolean = embeddedView ? embeddedView.recentFiles : pluginSettings.showRecentFiles
     // @ts-ignore
     const renderbookmarkedFiles: boolean = embeddedView ? embeddedView.bookmarkedFiles : pluginSettings.showbookmarkedFiles
+
+    // Logo placement relative to the title (falls back to the original left layout)
+    $: logoPosition = pluginSettings?.logoPosition ?? 'left'
 </script>
   
 <main class="home-tab" class:embedded={embeddedView}>
     {#if !embeddedView?.searchbarOnly}
         <ParticleWordmark>
-        <div class="home-tab-wordmark-container">
+        <div class="home-tab-wordmark-container"
+            class:logo-col={logoPosition === 'top' || logoPosition === 'bottom'}
+            class:logo-bottom={logoPosition === 'bottom'}
+            class:logo-right={logoPosition === 'right'}>
             {#if !(pluginSettings.logoType === 'none')}
-                <div class="home-tab-logo" style="margin-right: calc({pluginSettings.fontSize}/5)">
+                <div class="home-tab-logo" style:margin="{pluginSettings.logoMargin ?? 12}px">
                     {#if pluginSettings.logoType === 'default'}
                         <!-- New obsidian logo -->
                         <svg width="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" height="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -165,7 +171,7 @@
     {/if}
 
     {#if plugin.recentFileManager && recentFileList.length > 0  && renderRecentFiles}
-        <RecentFiles {recentFileList} {view} {pluginSettings} recentFileManager={plugin.recentFileManager}/>
+        <RecentFiles {recentFileList} {view} {pluginSettings} recentFileManager={plugin.recentFileManager} {HomeTabSearchBar}/>
     {/if}
 </main>
   
@@ -179,6 +185,14 @@
         align-items: center;
         justify-content: center;
         margin-bottom: 50px;
+    }
+    /* Logo placement: top/bottom stack the layout, right/bottom move the logo after the title */
+    .home-tab-wordmark-container.logo-col{
+        flex-direction: column;
+    }
+    .home-tab-wordmark-container.logo-right .home-tab-logo,
+    .home-tab-wordmark-container.logo-bottom .home-tab-logo{
+        order: 2;
     }
     .home-tab:not(.embedded) .home-tab-wordmark-container{
         padding-top: 100px;
