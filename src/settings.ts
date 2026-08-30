@@ -17,7 +17,7 @@ type LogoChoices = 'default' | 'imagePath' | 'imageLink' | 'lucideIcon' | 'oldLo
 type FontChoices = 'interfaceFont' | 'textFont' | 'monospaceFont' | 'custom'
 
 interface ObjectKeys {
-    [key: string]: any
+    [key: string]: unknown
 }
 
 interface logoStore extends ObjectKeys{
@@ -97,7 +97,9 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     particleEffectDisturbRadius: 124,
     particleEffectDisturbStrength: 1.8,
     maxResults: 5,
-    showbookmarkedFiles: app.internalPlugins.getPluginById('bookmarks') ? true : false,
+    // Cannot read app.internalPlugins at module level: the real availability
+    // check happens in main.ts onLayoutReady (disabled -> forced to false)
+    showbookmarkedFiles: true,
     showRecentFiles: true,
     maxRecentFiles: 12,
     storeRecentFile: true,
@@ -333,7 +335,6 @@ export class HomeTabSettingTab extends PluginSettingTab {
                                 .addSlider((slider) => slider
                                     .setValue(s.maxRecentFiles)
                                     .setLimits(1, 25, 1)
-                                    .setDynamicTooltip()
                                     .onChange((value) => {
                                         this.plugin.recentFileManager.onNewMaxListLenght(value)
                                         s.maxRecentFiles = value
@@ -552,7 +553,7 @@ export class HomeTabSettingTab extends PluginSettingTab {
                 }
                 text
                     .setPlaceholder(t.setting.logo.placeholder)
-                    .setValue(logoType !== 'default' && s.logo[logoType] != '' ? s.logo[logoType] : '')
+                    .setValue(logoType !== 'default' && s.logo[logoType] != '' ? String(s.logo[logoType]) : '')
                     .onChange(async (value) => {
                         if(value === '' || value == '/'){
                             invalidInputIcon.toggleVisibility(false)
@@ -648,8 +649,7 @@ export class HomeTabSettingTab extends PluginSettingTab {
                 setting
                     .addSlider((slider) => slider
                         .setLimits(min, max, step)
-                        .setValue(this.plugin.settings[key])
-                        .setDynamicTooltip()
+                        .setValue(this.plugin.settings[key] as number)
                         .onChange((value) => {
                             this.plugin.settings[key] = value
                             void this.plugin.saveSettings()
@@ -675,7 +675,7 @@ export class HomeTabSettingTab extends PluginSettingTab {
                 setting
                     .addDropdown((dropdown) => dropdown
                         .addOptions(options)
-                        .setValue(this.plugin.settings[key])
+                        .setValue(this.plugin.settings[key] as string)
                         .onChange((value) => {
                             this.plugin.settings[key] = value
                             void this.plugin.saveSettings()
