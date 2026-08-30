@@ -2,10 +2,6 @@ import type { TFile } from "obsidian"
 import { App } from 'obsidian'
 import { getUnresolvedLinkBasename, getUnresolvedLinkPath } from "./getFilesUtils"
 
-declare global {
-    var app: App;
-}
-
 const fileTypeLookupTable: FileTypeLookupTable = {
     image : ['jpg', 'jpeg', 'png', 'svg', 'gif', 'bmp'],
     video : ['mp4', 'webm', 'ogv', 'mov', 'mkv'],
@@ -54,7 +50,7 @@ export interface unresolvedFile {
     extension: string,
 }
 
-export function isUnresolved(unresolvedFile: unresolvedFile): boolean{
+export function isUnresolved(unresolvedFile: unresolvedFile, app: App): boolean{
     let filename = unresolvedFile.name
     let filePath = unresolvedFile.path
     let extension = unresolvedFile.extension
@@ -91,7 +87,7 @@ export function isUnresolved(unresolvedFile: unresolvedFile): boolean{
     return false
 }
 
-export function isUnresolvedLink(filename: string): boolean{
+export function isUnresolvedLink(filename: string, app: App): boolean{
     const parentFiles = Object.entries(app.metadataCache.unresolvedLinks)
     let isUnresolved = false
 

@@ -1,4 +1,4 @@
-import { normalizePath, Platform, TAbstractFile, TFile, View, debounce, type App } from 'obsidian'
+import { normalizePath, Platform, TAbstractFile, TFile, View, type App } from 'obsidian'
 import type Fuse from 'fuse.js'
 import { DEFAULT_FUSE_OPTIONS, FileFuzzySearch, type SearchFile } from './fuzzySearch'
 import type HomeTab from '../main'
@@ -9,12 +9,11 @@ import { generateHotkeySuggestion } from 'src/utils/htmlUtils'
 import { isValidExtension, type FileExtension, type FileType } from 'src/utils/getFileTypeUtils'
 import { get } from 'svelte/store'
 import HomeTabFileSuggestion from 'src/ui/svelteComponents/homeTabFileSuggestion.svelte'
-import { isValidUrl } from 'src/utils/urlUtils'
 import { MatchAnalyzer } from 'src/utils/matchAnalyzer'
 
 declare module 'obsidian'{
     interface MetadataCache{
-        onCleanCache: Function
+        onCleanCache: (callback: () => void) => void
     }
 }
 
@@ -31,7 +30,6 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
 
     constructor(app: App, plugin: HomeTab, view: View, searchBar: HomeTabSearchBar) {
         super(app, get(searchBar.searchBarEl), get(searchBar.suggestionContainerEl), {
-                // @ts-ignore
                 containerClass: `home-tab-suggestion-container ${Platform.isPhone ? 'is-phone' : ''}`,
                 additionalClasses: `${plugin.settings.selectionHighlight === 'accentColor' ? 'use-accent-color' : ''}`,
                 additionalModalInfo: plugin.settings.showShortcuts ? generateHotkeySuggestion([
@@ -50,7 +48,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         this.app.metadataCache.onCleanCache(() => {
             if (this.plugin.settings.markdownOnly) {
                 // 获取所有文件
-                const allFiles = getSearchFiles(this.plugin.settings.unresolvedLinks);
+                const allFiles = getSearchFiles(this.app, this.plugin.settings.unresolvedLinks);
                 
                 // 先过滤出 markdown 文件
                 let filteredFiles = this.filterSearchFileArray('markdown', allFiles);
@@ -63,7 +61,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                 
                 this.files = filteredFiles;
             } else {
-                this.files = getSearchFiles(this.plugin.settings.unresolvedLinks);
+                this.files = getSearchFiles(this.app, this.plugin.settings.unresolvedLinks);
             }
             
             this.fuzzySearch = new FileFuzzySearch(this.files, { 
@@ -146,7 +144,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
     }
 
     updateUnresolvedFiles(){
-        const unresolvedFiles = getUnresolvedMarkdownFiles()
+        const unresolvedFiles = getUnresolvedMarkdownFiles(this.app)
         let newFiles = false
         if(this.files){
             unresolvedFiles.forEach((unresolvedFile) => {
@@ -163,7 +161,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         this.app.metadataCache.onCleanCache(() => {
             if(oldPath){
                 this.files.splice(this.files.findIndex((f) => f.path === oldPath),1)
-                this.files.push(generateSearchFile(file))
+                this.files.push(generateSearchFile(file, this.app))
             }
             if(file.deleted){
                 this.files.splice(this.files.findIndex((f) => f.path === file.path),1)
@@ -175,10 +173,10 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
             else{
                 const fileIndex = this.files.findIndex((f) => f.path === file.path)
                 if(fileIndex === -1){
-                    this.files.push(generateSearchFile(file))
+                    this.files.push(generateSearchFile(file, this.app))
                 }
                 else if(this.files[fileIndex].isUnresolved){
-                    this.files[fileIndex] = generateSearchFile(file)
+                    this.files[fileIndex] = generateSearchFile(file, this.app)
                 }
             }
             this.fuzzySearch.updateSearchArray(this.files)
@@ -190,7 +188,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         
         // 如果是普通输入，保持原有的文件创建建议
         if(!this.activeFilter || this.activeFilter === 'markdown' || this.activeFilter === 'md'){
-            if (!!input) {
+            if (input) {
                 this.suggester.setSuggestions([{
                     item: {
                         name: `${input}.md`,
@@ -225,21 +223,6 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         
         const results = this.fuzzySearch.rawSearch(query, this.plugin.settings.maxResults);
         
-        // Debug 模式下输出单行格式的搜索结果汇总
-        if (this.plugin.settings.debugMode) {
-            console.clear();
-            console.log(`🔍 SEARCH: "${query}" | Results: ${results.length}`);
-            
-            // 生成单行汇总
-            const summary = results.map((result, index) => {
-                const matches = result.matches?.map(m => `${m.key}="${m.value}"`).join(',') || 'no-matches';
-                return `#${index+1}: "${result.item.basename}" | score=${result.score?.toExponential(2)} | matches=[${matches}]`;
-            }).join('\n');
-            
-            console.log(summary);
-            console.log('===================');
-        }
-        
         return results;
     }
 
@@ -249,20 +232,10 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         const analysis = this.matchAnalyzer.analyzeMatch(selectedItem, query);
         const item = selectedItem.item;
         
-        if (this.plugin.settings.debugMode) {
-            console.log('[HomeTabSuggester] Selected item action:', {
-                file: item.basename,
-                query: query,
-                action: analysis.shouldJumpToHeading ? 'Jump to heading' : 'Open file',
-                heading: analysis.matchedHeading,
-                newTab: newTab
-            });
-        }
-        
         // 根据分析结果决定跳转行为
         if (analysis.shouldJumpToHeading && analysis.matchedHeading) {
             const link = `${item.path}#${analysis.matchedHeading}`;
-            this.app.workspace.openLinkText(link, '', newTab ?? false);
+            void this.app.workspace.openLinkText(link, '', newTab ?? false);
             this.close(true); // 强制清理键盘事件监听器
             return;
         }
@@ -272,7 +245,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                 ? this.app.workspace.getLeaf('tab') 
                 : this.app.workspace.getLeaf();
 
-            leaf.setViewState({
+            void leaf.setViewState({
                 type: "webviewer",
                 active: true,
                 state: {
@@ -301,7 +274,7 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
     }
 
     getDisplayElementProps(suggestion: Fuse.FuseResult<SearchFile>): {nameToDisplay: string, filePath?: string, matchedHeading?: string, matchedAlias?: string, matchedTitle?: string}{
-        if (!this.inputEl || !(this.inputEl instanceof HTMLInputElement)) {
+        if (!this.inputEl || !this.inputEl.instanceOf(HTMLInputElement)) {
             return {
                 nameToDisplay: suggestion.item.basename,
                 filePath: undefined
@@ -334,36 +307,18 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
             const query = this.inputEl.value.trim();
             const analysis = this.matchAnalyzer.analyzeMatch(suggestion, query);
             
-            // Debug: 输出最终显示属性
-            if (this.plugin.settings.debugMode) {
-                const finalDisplay = `📋 DISPLAY: "${suggestion.item.basename}" → name="${analysis.displayInfo.showAlias ? analysis.displayInfo.matchedAlias : analysis.displayInfo.showTitle ? analysis.displayInfo.matchedTitle : suggestion.item.basename}" | showAlias=${analysis.displayInfo.showAlias} | showTitle=${analysis.displayInfo.showTitle} | showHeading=${analysis.displayInfo.showHeading}`
-                console.log(finalDisplay);
-            }
-            
             // 根据分析结果设置显示信息
             if (analysis.displayInfo.showHeading && analysis.matchedHeading) {
                 matchedHeading = analysis.matchedHeading;
                 nameToDisplay = suggestion.item.basename;
-                if (this.plugin.settings.debugMode) {
-                    console.log(`📝 SET HEADING: nameToDisplay="${nameToDisplay}" | matchedHeading="${matchedHeading}"`);
-                }
             } else if (analysis.displayInfo.showAlias && analysis.displayInfo.matchedAlias) {
                 matchedAlias = analysis.displayInfo.matchedAlias;
                 nameToDisplay = analysis.displayInfo.matchedAlias;
-                if (this.plugin.settings.debugMode) {
-                    console.log(`📝 SET ALIAS: nameToDisplay="${nameToDisplay}" | matchedAlias="${matchedAlias}"`);
-                }
             } else if (analysis.displayInfo.showTitle && analysis.displayInfo.matchedTitle) {
                 matchedTitle = analysis.displayInfo.matchedTitle;
                 nameToDisplay = analysis.displayInfo.matchedTitle;
-                if (this.plugin.settings.debugMode) {
-                    console.log(`📝 SET TITLE: nameToDisplay="${nameToDisplay}" | matchedTitle="${matchedTitle}"`);
-                }
             } else {
                 nameToDisplay = this.fuzzySearch.getBestMatch(suggestion, this.inputEl.value);
-                if (this.plugin.settings.debugMode) {
-                    console.log(`📝 SET FALLBACK: nameToDisplay="${nameToDisplay}" | getBestMatch result`);
-                }
             }
             
             const result = {
@@ -373,10 +328,6 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
                 matchedAlias: matchedAlias,
                 matchedTitle: matchedTitle
             };
-            
-            if (this.plugin.settings.debugMode) {
-                console.log(`🎁 PROPS TO SVELTE: "${suggestion.item.basename}" →`, result);
-            }
             
             return result;
         }
@@ -427,11 +378,11 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
     openFile(file: TFile, newTab?: boolean): void{
         // TODO Check if file is already open
         if(newTab){
-            this.app.workspace.createLeafInTabGroup().openFile(file)
+            void this.app.workspace.createLeafInTabGroup().openFile(file)
             // this.inputEl.value = ''
         }
         else{
-            this.view.leaf.openFile(file);
+            void this.view.leaf.openFile(file);
         }
     }
 
@@ -467,8 +418,8 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
     setFileFilter(filterKey: FileType | FileExtension): void{
         this.activeFilter = filterKey
         
-        this.app.metadataCache.onCleanCache(() => {
-            let filesToFilter = this.plugin.settings.markdownOnly ? getSearchFiles(this.plugin.settings.unresolvedLinks) : this.files;
+        void this.app.metadataCache.onCleanCache(() => {
+            let filesToFilter = this.plugin.settings.markdownOnly ? getSearchFiles(this.app, this.plugin.settings.unresolvedLinks) : this.files;
             
             // 如果启用了 markdownOnly 并且有额外后缀名，需要特殊处理
             if (this.plugin.settings.markdownOnly && this.plugin.settings.additionalExtensions && filterKey === 'markdown') {
