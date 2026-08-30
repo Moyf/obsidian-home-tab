@@ -35,6 +35,7 @@
 <div class="home-tab-file-item" class:use-accent-color="{pluginSettings.selectionHighlight === 'accentColor'}"
     on:mousedown|preventDefault="{e => handleMouseClick(e, file)}">
     
+    <!-- svelte-ignore a11y-click-events-have-key-events (mouse-driven UI, keyboard users have alternative paths) -->
     <div class="home-tab-file-item-remove_btn" aria-label="File options"
         on:click={(e) => {
             contextualMenu.showAtMouseEvent(e)
