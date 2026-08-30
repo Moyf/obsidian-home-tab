@@ -37,12 +37,10 @@ export class MatchAnalyzer {
      */
     resetForNewSearch() {
         this.hasAnalyzed = false;
-        if (this.settings.debugMode) {
-            console.log('[MatchAnalyzer] 🔄 RESET for new search');
-        }
+        this.debug('🔄 RESET for new search');
     }
     
-    private debug(...args: any[]) {
+    private debug(...args: unknown[]) {
         if (this.settings.debugMode) {
             console.log('[MatchAnalyzer]', ...args)
         }

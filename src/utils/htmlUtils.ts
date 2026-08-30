@@ -1,5 +1,5 @@
 import { lucideIcons, type LucideIcon } from "./lucideIcons";
-import { getIcon, setIcon } from "obsidian";
+import { getIcon } from "obsidian";
 
 interface lucideIconOptions{
     size?: number,
@@ -17,10 +17,14 @@ export function getLucideIcon(iconId: LucideIcon, options?: lucideIconOptions): 
         iconEl.ariaLabel = options?.ariaLabel ?? ''
 
         if(size !=24 || options?.strokeWidth !=2){
-            iconEl.hasClass('svg-icon') ? iconEl.removeClass('svg-icon') : null
+            if (iconEl.hasClass('svg-icon')) {
+                iconEl.removeClass('svg-icon')
+            }
         }
         
-        options?.class ? iconEl.addClass(options.class) : null
+        if (options?.class) {
+            iconEl.addClass(options.class)
+        }
         iconEl.setAttribute('width', size.toString())
         iconEl.setAttribute('height', size.toString())
         iconEl.setAttribute('stroke-width', (options?.strokeWidth ?? 2).toString())
