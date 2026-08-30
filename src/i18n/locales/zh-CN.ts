@@ -153,6 +153,26 @@ const zhCN: BaseMessage = {
 			name: 'Logo 边距',
 			desc: '设置 Logo 四周留出的间距（像素）。',
 		},
+		logoMarginIndividual: {
+			name: '单独调整各方向边距',
+			desc: '分别为 Logo 的四个方向设置边距。',
+		},
+		logoMarginTop: {
+			name: '上边距',
+			desc: 'Logo 上方留出的间距（像素）。',
+		},
+		logoMarginRight: {
+			name: '右边距',
+			desc: 'Logo 右侧留出的间距（像素）。',
+		},
+		logoMarginBottom: {
+			name: '下边距',
+			desc: 'Logo 下方留出的间距（像素）。',
+		},
+		logoMarginLeft: {
+			name: '左边距',
+			desc: 'Logo 左侧留出的间距（像素）。',
+		},
 		logoScale: {
 			name: 'Logo 缩放',
 			desc: '设置 Logo 相对于标题字号的尺寸。',

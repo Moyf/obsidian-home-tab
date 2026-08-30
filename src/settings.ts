@@ -32,6 +32,11 @@ export interface HomeTabSettings extends ObjectKeys{
     logo: logoStore
     logoPosition: LogoPosition
     logoMargin: number
+    logoMarginIndividual: boolean
+    logoMarginTop: number
+    logoMarginRight: number
+    logoMarginBottom: number
+    logoMarginLeft: number
     logoScale: number
     iconColor?: string
     iconColorType: ColorChoices
@@ -86,6 +91,11 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
         imageLink: '',},
     logoPosition: 'left',
     logoMargin: 12,
+    logoMarginIndividual: false,
+    logoMarginTop: 12,
+    logoMarginRight: 12,
+    logoMarginBottom: 12,
+    logoMarginLeft: 12,
     logoScale: 1.2,
     iconColorType: 'default',
     wordmark: 'Obsidian',
@@ -381,16 +391,47 @@ export class HomeTabSettingTab extends PluginSettingTab {
                                 type: 'group',
                                 heading: t.group.logoLayout,
                                 items: [
+                                    this.sliderWithReset('logoScale', t.setting.logoScale.name, t.setting.logoScale.desc, 0.3, 3, 0.1),
                                     {
                                         // Placement applies to every rendered logo (including the built-in ones)
                                         ...this.dropdownWithReset('logoPosition', t.setting.logoPosition.name, t.setting.logoPosition.desc, t.setting.logoPosition.options),
                                         visible: () => s.logoType !== 'none',
                                     },
                                     {
-                                        ...this.sliderWithReset('logoMargin', t.setting.logoMargin.name, t.setting.logoMargin.desc, 0, 50, 1),
+                                        name: t.setting.logoMarginIndividual.name,
+                                        desc: t.setting.logoMarginIndividual.desc,
                                         visible: () => s.logoType !== 'none',
+                                        render: (setting) => {
+                                            setting
+                                                .addToggle((toggle) => toggle
+                                                    .setValue(s.logoMarginIndividual)
+                                                    .onChange(async (value) => {
+                                                        s.logoMarginIndividual = value
+                                                        await this.plugin.saveSettings()
+                                                        this.update() // rebuild to show/hide the per-direction margin sliders
+                                                    }))
+                                        },
                                     },
-                                    this.sliderWithReset('logoScale', t.setting.logoScale.name, t.setting.logoScale.desc, 0.3, 3, 0.1),
+                                    {
+                                        ...this.sliderWithReset('logoMargin', t.setting.logoMargin.name, t.setting.logoMargin.desc, 0, 50, 1),
+                                        visible: () => s.logoType !== 'none' && !s.logoMarginIndividual,
+                                    },
+                                    {
+                                        ...this.sliderWithReset('logoMarginTop', t.setting.logoMarginTop.name, t.setting.logoMarginTop.desc, 0, 50, 1),
+                                        visible: () => s.logoType !== 'none' && s.logoMarginIndividual,
+                                    },
+                                    {
+                                        ...this.sliderWithReset('logoMarginRight', t.setting.logoMarginRight.name, t.setting.logoMarginRight.desc, 0, 50, 1),
+                                        visible: () => s.logoType !== 'none' && s.logoMarginIndividual,
+                                    },
+                                    {
+                                        ...this.sliderWithReset('logoMarginBottom', t.setting.logoMarginBottom.name, t.setting.logoMarginBottom.desc, 0, 50, 1),
+                                        visible: () => s.logoType !== 'none' && s.logoMarginIndividual,
+                                    },
+                                    {
+                                        ...this.sliderWithReset('logoMarginLeft', t.setting.logoMarginLeft.name, t.setting.logoMarginLeft.desc, 0, 50, 1),
+                                        visible: () => s.logoType !== 'none' && s.logoMarginIndividual,
+                                    },
                                 ],
                             },
                         ],

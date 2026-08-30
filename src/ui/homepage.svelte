@@ -45,6 +45,14 @@
 
     // Logo placement relative to the title (falls back to the original left layout)
     $: logoPosition = pluginSettings?.logoPosition ?? 'left'
+
+    // Logo margins: one uniform value, or per side when individual adjustment is on
+    $: logoMargins = {
+        top: (pluginSettings?.logoMarginIndividual ? pluginSettings.logoMarginTop : pluginSettings?.logoMargin) ?? 12,
+        right: (pluginSettings?.logoMarginIndividual ? pluginSettings.logoMarginRight : pluginSettings?.logoMargin) ?? 12,
+        bottom: (pluginSettings?.logoMarginIndividual ? pluginSettings.logoMarginBottom : pluginSettings?.logoMargin) ?? 12,
+        left: (pluginSettings?.logoMarginIndividual ? pluginSettings.logoMarginLeft : pluginSettings?.logoMargin) ?? 12,
+    }
 </script>
   
 <main class="home-tab" class:embedded={embeddedView}>
@@ -55,7 +63,7 @@
             class:logo-bottom={logoPosition === 'bottom'}
             class:logo-right={logoPosition === 'right'}>
             {#if !(pluginSettings.logoType === 'none')}
-                <div class="home-tab-logo" style:margin="{pluginSettings.logoMargin ?? 12}px">
+                <div class="home-tab-logo" style:margin-top="{logoMargins.top}px" style:margin-right="{logoMargins.right}px" style:margin-bottom="{logoMargins.bottom}px" style:margin-left="{logoMargins.left}px">
                     {#if pluginSettings.logoType === 'default'}
                         <!-- New obsidian logo -->
                         <svg width="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" height="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">

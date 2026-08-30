@@ -153,6 +153,26 @@ const en: BaseMessage = {
 			name: 'Logo margin',
 			desc: 'Set the spacing around the logo, in pixels.',
 		},
+		logoMarginIndividual: {
+			name: 'Individual margins',
+			desc: 'Set the margin for each side of the logo separately.',
+		},
+		logoMarginTop: {
+			name: 'Top margin',
+			desc: 'Spacing above the logo, in pixels.',
+		},
+		logoMarginRight: {
+			name: 'Right margin',
+			desc: 'Spacing to the right of the logo, in pixels.',
+		},
+		logoMarginBottom: {
+			name: 'Bottom margin',
+			desc: 'Spacing below the logo, in pixels.',
+		},
+		logoMarginLeft: {
+			name: 'Left margin',
+			desc: 'Spacing to the left of the logo, in pixels.',
+		},
 		logoScale: {
 			name: 'Logo scale',
 			desc: 'Set the logo dimensions relative to the title font size.',

@@ -68,6 +68,11 @@ export interface BaseMessage {
 		iconColor: SettingEntry
 		logoPosition: SettingEntry & { options: DropdownOptions }
 		logoMargin: SettingEntry
+		logoMarginIndividual: SettingEntry
+		logoMarginTop: SettingEntry
+		logoMarginRight: SettingEntry
+		logoMarginBottom: SettingEntry
+		logoMarginLeft: SettingEntry
 		logoScale: SettingEntry
 		title: SettingEntry
 		titleFont: SettingEntry & {
