@@ -13,7 +13,7 @@ export default class fontSuggester extends PopoverTextInputSuggester<Fuse.FuseRe
         super(app, inputEl, viewOptions)
         this.renderFont = renderFont
 
-        this.getInstalledFonts().then(fontList => this.fuzzySearch = new ArrayFuzzySearch(fontList))
+        void this.getInstalledFonts().then(fontList => this.fuzzySearch = new ArrayFuzzySearch(fontList))
     }
 
     async getInstalledFonts(): Promise<string[]>{
@@ -36,7 +36,7 @@ export default class fontSuggester extends PopoverTextInputSuggester<Fuse.FuseRe
     useSelectedItem(selectedItem: Fuse.FuseResult<string>): void {
         this.inputEl.value = selectedItem.item.replace(/"/g, ``)
         this.inputEl.trigger("input")
-        this.onInput().then(() => this.close())
+        void this.onInput().then(() => this.close())
     }
 
     getDisplayElementComponentType(): typeof FontSuggestion{

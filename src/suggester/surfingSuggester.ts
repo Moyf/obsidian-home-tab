@@ -66,7 +66,6 @@ export default class SurfingSuggester extends TextInputSuggester<Fuse.FuseResult
 
     constructor(app: App, plugin: HomeTab, view: View, searchBar: HomeTabSearchBar) {
         super(app, get(searchBar.searchBarEl), get(searchBar.suggestionContainerEl), {
-                // @ts-ignore
                 containerClass: `home-tab-suggestion-container ${Platform.isPhone ? 'is-phone' : ''}`,
                 additionalClasses: `${plugin.settings.selectionHighlight === 'accentColor' ? 'use-accent-color' : ''}`,
                 additionalModalInfo: plugin.settings.showShortcuts ? generateHotkeySuggestion([
@@ -106,7 +105,7 @@ export default class SurfingSuggester extends TextInputSuggester<Fuse.FuseResult
 
     onNoSuggestion(): void {
         const input = this.inputEl.value
-        if (!!input){
+        if (input){
             this.suggester.setSuggestions([{
                 item: {
                     type: 'newUrl',
@@ -127,10 +126,10 @@ export default class SurfingSuggester extends TextInputSuggester<Fuse.FuseResult
         return this.fuzzySearch.rawSearch(input, this.plugin.settings.maxResults)
     }
 
-    async useSelectedItem(selectedItem: Fuse.FuseResult<SurfingItem>, newTab?: boolean): Promise<void> {
+    useSelectedItem(selectedItem: Fuse.FuseResult<SurfingItem>, newTab?: boolean): void {
         const leaf = this.app.workspace.getMostRecentLeaf()
         if(leaf){
-            await this.patchLeaf(leaf, selectedItem.item.url)
+            void this.patchLeaf(leaf, selectedItem.item.url)
         }
     }
 
@@ -185,7 +184,7 @@ export default class SurfingSuggester extends TextInputSuggester<Fuse.FuseResult
         return []
     }
     private async getBookmarks(): Promise<SurfingJSONstoreObj>{
-        return JSON.parse(await this.app.vault.adapter.read(`${this.app.vault.configDir}/${this.surfingJSONfile}`))
+        return JSON.parse(await this.app.vault.adapter.read(`${this.app.vault.configDir}/${this.surfingJSONfile}`)) as SurfingJSONstoreObj
     }
     private async getBookmarkedItems(): Promise<SurfingItem[]>{
         const items: SurfingItem[] = []

@@ -1,4 +1,4 @@
-import { Platform, WorkspaceLeaf, type App, type View } from 'obsidian';
+import { Platform, type App, type View } from 'obsidian';
 import type HomeTab from '../main';
 import type HomeTabSearchBar from "../homeTabSearchbar";
 import { TextInputSuggester } from './suggester';
@@ -68,14 +68,14 @@ export default class WebViewerSuggester extends TextInputSuggester<WebViewerItem
         return [];
     }
 
-    async useSelectedItem(item: WebViewerItem, newTab = false): Promise<void> {
+    useSelectedItem(item: WebViewerItem, newTab = false): void {
         if (!item) return;
-        
-        const leaf = newTab 
-            ? this.app.workspace.getLeaf('tab') 
+
+        const leaf = newTab
+            ? this.app.workspace.getLeaf('tab')
             : this.app.workspace.getLeaf();
 
-        await leaf.setViewState({
+        void leaf.setViewState({
             type: "webviewer",
             active: true,
             state: {

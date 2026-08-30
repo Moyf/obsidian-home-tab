@@ -7,6 +7,13 @@ import { get } from 'svelte/store'
 import OmnisearchSuggestion from 'src/ui/svelteComponents/omnisearchSuggestion.svelte'
 import { concatenateStringsToRegex, escapeStringForRegExp } from 'src/utils/regexUtils'
 
+// Omnisearch exposes its API on the global window object
+declare global {
+    interface Window {
+        omnisearch: OmnisearchApi
+    }
+}
+
 export type OmnisearchApi = {
     // Returns a promise that will contain the same results as the Vault modal
     search: (query: string) => Promise<ResultNoteApi[]>,
@@ -40,7 +47,6 @@ export default class OmnisearchSuggester extends TextInputSuggester<ResultNoteAp
 
     constructor(app: App, plugin: HomeTab, view: View, searchBar: HomeTabSearchBar) {
         super(app, get(searchBar.searchBarEl), get(searchBar.suggestionContainerEl), {
-                // @ts-ignore
                 containerClass: `home-tab-suggestion-container ${Platform.isPhone ? 'is-phone' : ''}`,
                 // suggestionItemClass: 'suggestion-item omnisearch-result',
                 additionalClasses: `${plugin.settings.selectionHighlight === 'accentColor' ? 'use-accent-color' : ''}`,
@@ -55,9 +61,8 @@ export default class OmnisearchSuggester extends TextInputSuggester<ResultNoteAp
         this.plugin = plugin
         this.view = view
         this.searchBar = searchBar
-        
-        // @ts-ignore
-        this.omnisearch = omnisearch
+
+        this.omnisearch = window.omnisearch
 
         // Open file in new tab
         this.scope.register(['Mod'], 'Enter', (e) => {
@@ -111,18 +116,19 @@ export default class OmnisearchSuggester extends TextInputSuggester<ResultNoteAp
                     shouldJump = false;
                     break;
                 case 'smart':
-                default:
+                default: {
                     // 智能模式：检查是否有文件名的直接匹配
-                    const filenameMatch = selectedItem.matches?.find(match => 
+                    const filenameMatch = selectedItem.matches?.find(match =>
                         match.offset === 0 || match.match === selectedItem.basename
                     );
                     shouldJump = !filenameMatch;
                     break;
+                }
             }
             
             if (shouldJump) {
                 const link = `${selectedItem.path}#${headingMatch.match}`;
-                this.app.workspace.openLinkText(link, '', newTab ?? false);
+                void this.app.workspace.openLinkText(link, '', newTab ?? false);
                 return;
             }
         }
@@ -158,10 +164,10 @@ export default class OmnisearchSuggester extends TextInputSuggester<ResultNoteAp
 
     openFile(file: TFile, newTab?: boolean): void{
         if(newTab){
-            this.app.workspace.createLeafInTabGroup().openFile(file)
+            void this.app.workspace.createLeafInTabGroup().openFile(file)
         }
         else{
-            this.view.leaf.openFile(file);
+            void this.view.leaf.openFile(file);
         }
     }
 
