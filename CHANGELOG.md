@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.3.1] - 2026-08-30
+
+### Compatibility
+
+- **Plugin id renamed** from `home-tab-plus` to `first-light`: the 1.3.0 release still shipped under the old id. After updating, Obsidian treats this as a different plugin — re-enable it and re-configure its settings once; the old `home-tab-plus` folder can be removed from `.obsidian/plugins/`. Install links now point to `Moyf/first-light`.
+
+### Features
+
+- Add logo position and margin settings for the wordmark area, with dedicated i18n entries
+- Add a selection highlight sub-page at the end of Appearance, with i18n entries
+- Recent files navigation now loops: continuing past the last entry wraps back to the search bar
+- Widen particle effect slider ranges (spacing 1–8, dot size down to 0.2) and tune defaults to a finer lattice
+
+### Bug Fixes
+
+- Fix suggester popovers being trapped behind popout windows: suggestion popups now render in the focused window, and settings-page suggesters (font / icon / image) migrated to the official `AbstractInputSuggest`, which positions itself correctly in popout settings windows
+- Fix the particle engine resolving `devicePixelRatio`, computed styles and canvas resources from the main window instead of the window hosting the view (popout-safe)
+- Fix a startup race that could wipe stored recent files before they were loaded
+- Keep home tab leaf positions across plugin reloads: `onunload` no longer detaches the plugin's leaves
+- Fix logo icon color falling back to `currentColor` when no custom color is set
+- Bake the computed `stroke` of logo SVGs into the rasterized image so particle icons keep their color (CSS variables do not resolve in standalone SVG images)
+- Style the native color input used by declarative settings rows, and re-render the page when a color mode dropdown changes so the custom color picker appears
+
+### Improvements
+
+- Resolve all Obsidian plugin review lint findings: explicit types instead of `Function`/`any`, no `@ts-ignore`, `app` passed explicitly to file utils, `window.`-prefixed timers and animation frames, `createEl` helpers, removal of deprecated `setDynamicTooltip` and of global `app` access (also fixes a latent crash in unresolved-link path resolution)
+- Drop unused dependencies (`builtin-modules`, `fs-extra`, `dotenv`)
+
 ## [1.3.0] - 2026-08-30
 
 ### Features
