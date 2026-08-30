@@ -25,7 +25,7 @@ export default class iconSuggester extends PopoverTextInputSuggester<Fuse.FuseRe
     useSelectedItem(selectedItem: Fuse.FuseResult<string>): void {
         this.inputEl.value = selectedItem.item
         this.inputEl.trigger("input")
-        this.onInput().then(() => this.close())
+        void this.onInput().then(() => this.close())
     }
 
     getDisplayElementComponentType(): typeof IconSuggestion{
