@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Platform } from "obsidian";
-	import { filterKeys, type FilterKey, type SearchBarFilterType } from "src/homeTabSearchbar";
+    import { Platform } from "obsidian";
+    import { filterKeys, type FilterKey, type SearchBarFilterType } from "src/homeTabSearchbar";
     import type HomeTabSearchBar from "src/homeTabSearchbar";
+    import { recentFilterFocusRequest, recentListFocusRequest } from "src/store";
     import { onMount } from 'svelte';
     
     export let HomeTabSearchBar: HomeTabSearchBar
@@ -36,9 +37,17 @@
         if(e.key === 'Tab'){
             e.preventDefault()
             const key = inputValue.toLowerCase()
-            // Activate search filter with tab
-            if(filterKeys.find(item => item === key)){
+            if(!e.shiftKey && filterKeys.find(item => item === key)){
+                // Activate search filter with tab
                 HomeTabSearchBar.updateActiveSuggester(key as FilterKey)
+            }
+            // Shift+Tab (reverse loop): jump straight to the recent files list
+            else if(e.shiftKey){
+                recentListFocusRequest.update(n => n + 1)
+            }
+            // Tab (forward loop): move focus to the recent files filter
+            else{
+                recentFilterFocusRequest.update(n => n + 1)
             }
         }
     }
