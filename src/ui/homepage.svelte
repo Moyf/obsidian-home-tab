@@ -136,7 +136,7 @@
 
                     {:else if pluginSettings.logoType === 'lucideIcon' && !!pluginSettings.logo.lucideIcon}
                             <svg xmlns="http://www.w3.org/2000/svg"  width="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" height="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" 
-                            viewBox="0 0 24 24" fill="none" stroke="{pluginSettings.iconColorType === 'default' ? 'currentColor' : pluginSettings.iconColorType === 'accentColor' ?  'var(--interactive-accent)' : pluginSettings.iconColor}" 
+                            viewBox="0 0 24 24" fill="none" stroke="{pluginSettings.iconColorType === 'default' ? 'currentColor' : pluginSettings.iconColorType === 'accentColor' ?  'var(--interactive-accent)' : (pluginSettings.iconColor || 'currentColor')}" 
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                             class="svg-icon lucide-{pluginSettings.logo.lucideIcon}">
                                 {@html getIcon(pluginSettings.logo.lucideIcon)?.innerHTML}
