@@ -18,6 +18,9 @@ export class RecentFileManager extends Component{
     private app: App
     private plugin: HomeTab
     private pluginSettings: HomeTabSettings
+    // Guards against persisting the in-memory list before the stored list has been loaded on
+    // startup, which would overwrite the persisted recent files with an empty/partial list
+    private storedFilesLoaded = false
 
     constructor(app: App, plugin: HomeTab){
         super()
@@ -28,12 +31,11 @@ export class RecentFileManager extends Component{
     
     onload(): void {
         this.registerEvent(this.app.workspace.on('file-open', async (file) => {this.updateRecentFiles(file); await this.storeRecentFiles()})) // Save file to recent files list on opening
-        this.registerEvent(this.app.vault.on('delete', async (file) => {
+        this.registerEvent(this.app.vault.on('delete', (file) => {
             if (file instanceof TFile) {
                 this.removeRecentFile(file)
             }
-            await this.storeRecentFiles()
-        })) // Remove recent file if deleted
+        })) // Remove recent file if deleted (removeRecentFile persists the updated list)
         this.registerEvent(this.app.vault.on('rename',  (file) => file instanceof TFile ? this.onFileRename() : null)) // Update displayed name on file rename
 
         this.loadStoredRecentFiles()
@@ -98,6 +100,7 @@ export class RecentFileManager extends Component{
     }
 
     private async storeRecentFiles(): Promise<void>{
+        if(!this.storedFilesLoaded) return // Skip persisting during startup, before the stored list has been loaded
         if(this.plugin.settings.storeRecentFile){
             let storeObj: recentFileStore[] = []
             get(recentFiles).forEach((item) => storeObj.push({
@@ -123,7 +126,14 @@ export class RecentFileManager extends Component{
                     }
                 })
                 recentFiles.set(filesToLoad)
+                this.storedFilesLoaded = true
+                // Re-persist the loaded list to purge entries whose files no longer exist
+                this.storeRecentFiles()
             })
+        }
+        else{
+            // Nothing to load, so persistence can start right away (e.g. if the setting is enabled later on)
+            this.storedFilesLoaded = true
         }
     }
 
