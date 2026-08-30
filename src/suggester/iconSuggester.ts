@@ -1,39 +1,41 @@
-import { PopoverTextInputSuggester,  type suggesterViewOptions } from "./suggester"
+import { AbstractInputSuggest, setIcon, type App } from 'obsidian'
 import type Fuse from 'fuse.js'
-import type { App, } from 'obsidian'
 import { ArrayFuzzySearch } from "./fuzzySearch"
 import { lucideIcons } from "../utils/lucideIcons"
-import IconSuggestion from "src/ui/svelteComponents/iconSuggestion.svelte"
 
-
-export default class iconSuggester extends PopoverTextInputSuggester<Fuse.FuseResult<string>>{
+/**
+ * Lucide icon suggester built on the official AbstractInputSuggest, which
+ * handles popover positioning (including popout windows) out of the box.
+ */
+export default class iconSuggester extends AbstractInputSuggest<Fuse.FuseResult<string>>{
+    private inputEl: HTMLInputElement
     private iconList: string[]
     private fuzzySearch: ArrayFuzzySearch
     private displayIcon: boolean
 
-    constructor(app: App, inputEl: HTMLInputElement, viewOptions?: suggesterViewOptions, displayIcon?: boolean){
-        super(app, inputEl, viewOptions)
+    constructor(app: App, inputEl: HTMLInputElement, displayIcon?: boolean){
+        super(app, inputEl)
+        this.inputEl = inputEl
         this.iconList = [... lucideIcons]
         this.fuzzySearch = new ArrayFuzzySearch(this.iconList)
         this.displayIcon = displayIcon ?? false
     }
 
-    getSuggestions(input: string): Fuse.FuseResult<string>[] {
-        return this.fuzzySearch.filteredSearch(input, 0.25, 15)
+    getSuggestions(query: string): Fuse.FuseResult<string>[] {
+        return this.fuzzySearch.filteredSearch(query, 0.25, 15)
     }
 
-    useSelectedItem(selectedItem: Fuse.FuseResult<string>): void {
-        this.inputEl.value = selectedItem.item
-        this.inputEl.trigger("input")
-        void this.onInput().then(() => this.close())
-    }
-
-    getDisplayElementComponentType(): typeof IconSuggestion{
-        return IconSuggestion
-    }
-    getDisplayElementProps(): {displayIcon: boolean}{
-        return {
-            displayIcon: this.displayIcon
+    renderSuggestion(suggestion: Fuse.FuseResult<string>, el: HTMLElement): void {
+        el.addClass('suggestion-item')
+        if (this.displayIcon) {
+            setIcon(el, suggestion.item)
         }
+        el.createSpan({ text: suggestion.item })
+    }
+
+    selectSuggestion(suggestion: Fuse.FuseResult<string>): void {
+        this.inputEl.value = suggestion.item
+        this.inputEl.trigger("input")
+        this.close()
     }
 }

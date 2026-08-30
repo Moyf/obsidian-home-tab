@@ -369,6 +369,7 @@ export class HomeTabSettingTab extends PluginSettingTab {
                             },
                             this.dropdownWithReset('iconColorType', t.setting.iconColor.name, t.setting.iconColor.desc, colorOptions(), {
                                 visible: () => s.logoType === 'lucideIcon',
+                                rebuildAfterChange: true, // re-render so the custom color picker shows up
                             }),
                             {
                                 name: t.setting.iconColor.name,
@@ -446,12 +447,21 @@ export class HomeTabSettingTab extends PluginSettingTab {
                                 },
                             },
                             this.sliderWithReset('fontWeight', t.setting.fontWeight.name, t.setting.fontWeight.desc, 100, 900, 100),
-                            this.dropdownWithReset('fontColorType', t.setting.titleColor.name, undefined, colorOptions()),
+                            this.dropdownWithReset('fontColorType', t.setting.titleColor.name, undefined, colorOptions(), {
+                                rebuildAfterChange: true, // re-render so the custom color picker shows up
+                            }),
                             {
                                 name: t.setting.titleColor.name,
                                 visible: () => s.fontColorType === 'custom',
                                 control: { type: 'color', key: 'fontColor', defaultValue: '#000000' },
                             },
+                        ],
+                    },
+                    {
+                        type: 'page',
+                        name: t.page.selectionHighlight.name,
+                        desc: t.page.selectionHighlight.desc,
+                        items: [
                             this.dropdownWithReset('selectionHighlight', t.setting.selectionHighlight.name, t.setting.selectionHighlight.desc,
                                 { default: t.common.themeDefault, accentColor: t.common.accentColor }, { refreshAfterChange: true }),
                         ],
@@ -560,16 +570,10 @@ export class HomeTabSettingTab extends PluginSettingTab {
             .addSearch((text) => {
                 const logoType = s.logoType
                 if(logoType === 'imagePath'){
-                    new ImageFileSuggester(this.app, text.inputEl, {
-                        isScrollable: true,
-                        style: `max-height: 200px`
-                    })
+                    new ImageFileSuggester(this.app, text.inputEl)
                 }
                 else if(logoType === 'lucideIcon'){
-                    new iconSuggester(this.app, text.inputEl, {
-                        isScrollable: true,
-                        style: `max-height: 200px`}, 
-                        true)
+                    new iconSuggester(this.app, text.inputEl, true)
                 }
                 text
                     .setPlaceholder(t.setting.logo.placeholder)
@@ -631,12 +635,7 @@ export class HomeTabSettingTab extends PluginSettingTab {
         setting.addSearch((text) => {
             text.setValue(s.font ? s.font.replace(/"/g, ''): '')
             text.setPlaceholder(t.setting.logo.placeholder)
-            const suggester: fontSuggester | undefined = Platform.isMobile || Platform.isMacOS ? undefined : new fontSuggester(this.app, text.inputEl, {
-                isScrollable: true,
-                style: `max-height: 200px;
-                width: fit-content;
-                min-width: 200px;`}, 
-                true)
+            const suggester: fontSuggester | undefined = Platform.isMobile || Platform.isMacOS ? undefined : new fontSuggester(this.app, text.inputEl, true)
 
             text.onChange(async (value) => {
                 value = value.indexOf(' ') >= 0 ? `"${value}"` : value //Restore "" if font name contains whitespaces
