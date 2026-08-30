@@ -9,7 +9,7 @@ export default class ImageFileSuggester extends PopoverTextInputSuggester<Fuse.F
 
     constructor(app: App, inputEl: HTMLInputElement, viewOptions?: suggesterViewOptions){
         super(app, inputEl, viewOptions)
-        this.fuzzySearch = new ImageFileFuzzySearch(undefined, {...DEFAULT_FUSE_OPTIONS, ignoreLocation: true, keys: ['name']})
+        this.fuzzySearch = new ImageFileFuzzySearch(app, undefined, {...DEFAULT_FUSE_OPTIONS, ignoreLocation: true, keys: ['name']})
     }
 
     getSuggestions(input: string): Fuse.FuseResult<TFile>[] {
