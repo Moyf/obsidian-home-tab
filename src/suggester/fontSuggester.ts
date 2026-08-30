@@ -17,7 +17,7 @@ export default class fontSuggester extends AbstractInputSuggest<Fuse.FuseResult<
         this.inputEl = inputEl
         this.renderFont = renderFont
 
-        this.getInstalledFonts().then(fontList => {
+        void this.getInstalledFonts().then(fontList => {
             this.fontList = fontList
             this.fuzzySearch = new ArrayFuzzySearch(fontList)
         })

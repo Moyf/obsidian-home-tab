@@ -13,7 +13,7 @@ export default class ImageFileSuggester extends AbstractInputSuggest<Fuse.FuseRe
     constructor(app: App, inputEl: HTMLInputElement){
         super(app, inputEl)
         this.inputEl = inputEl
-        this.fuzzySearch = new ImageFileFuzzySearch(undefined, {...DEFAULT_FUSE_OPTIONS, ignoreLocation: true, keys: ['name']})
+        this.fuzzySearch = new ImageFileFuzzySearch(app, undefined, {...DEFAULT_FUSE_OPTIONS, ignoreLocation: true, keys: ['name']})
     }
 
     getSuggestions(query: string): Fuse.FuseResult<TFile>[] {
