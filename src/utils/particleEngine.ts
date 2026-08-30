@@ -163,7 +163,7 @@ export class ParticleWordmarkEngine {
         if (sources.ops.length === 0) return false
 
         const scale = Math.max(2, window.devicePixelRatio || 1)
-        const offscreen = this.container.createEl('canvas')
+        const offscreen = createEl('canvas')
         offscreen.width = Math.ceil(containerRect.width * scale)
         offscreen.height = Math.ceil(containerRect.height * scale)
         const offscreenContext = offscreen.getContext('2d')
@@ -229,7 +229,7 @@ export class ParticleWordmarkEngine {
         if (contentRect.width <= 0 || contentRect.height <= 0) return
 
         const scale = Math.max(2, window.devicePixelRatio || 1)
-        const offscreen = this.container.createEl('canvas')
+        const offscreen = createEl('canvas')
         offscreen.width = Math.ceil(contentRect.width * scale)
         offscreen.height = Math.ceil(contentRect.height * scale)
         const offscreenContext = offscreen.getContext('2d')
