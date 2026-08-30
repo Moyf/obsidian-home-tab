@@ -33,21 +33,12 @@ importers:
       '@typescript-eslint/parser':
         specifier: 5.29.0
         version: 5.29.0(eslint@8.57.1)(typescript@4.7.4)
-      builtin-modules:
-        specifier: 3.3.0
-        version: 3.3.0
-      dotenv:
-        specifier: ^16.5.0
-        version: 16.6.1
       esbuild:
         specifier: 0.14.47
         version: 0.14.47
       esbuild-svelte:
         specifier: ^0.7.1
         version: 0.7.4(esbuild@0.14.47)(svelte@3.59.2)
-      fs-extra:
-        specifier: ^11.2.0
-        version: 11.3.5
       obsidian:
         specifier: 1.13.1
         version: 1.13.1(@codemirror/state@6.5.0)(@codemirror/view@6.38.6)
@@ -339,10 +330,6 @@ packages:
   buffer-crc32@0.2.13:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
 
-  builtin-modules@3.3.0:
-    resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
-    engines: {node: '>=6'}
-
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
@@ -402,10 +389,6 @@ packages:
   doctrine@3.0.0:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}
     engines: {node: '>=6.0.0'}
-
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
-    engines: {node: '>=12'}
 
   es6-promise@3.3.1:
     resolution: {integrity: sha512-SOp9Phqvqn7jtEUxPWdWfWoLmyt2VaJ6MpvP9Comy1MceMXqE6bxvaTu4iaxpYYPzhny28Lc+M87/c2cPK6lDg==}
@@ -636,10 +619,6 @@ packages:
   font-list@1.6.0:
     resolution: {integrity: sha512-gI6N38fcq4er2BkKeW33SQt5nLMGX/GuT7mgWa3OiOZSQAJ3b6ZiCg3hPqlnnaULW/pcR1R7sUMrN6HfovXKAg==}
 
-  fs-extra@11.3.5:
-    resolution: {integrity: sha512-eKpRKAovdpZtR1WopLHxlBWvAgPny3c4gX1G5Jhwmmw4XJj0ifSD5qB5TOo8hmA0wlRKDAOAhEE1yVPgs6Fgcg==}
-    engines: {node: '>=14.14'}
-
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
@@ -733,9 +712,6 @@ packages:
 
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
-
-  jsonfile@6.2.1:
-    resolution: {integrity: sha512-zwOTdL3rFQ/lRdBnntKVOX6k5cKJwEc1HdilT71BWEu7J41gXIB2MRp+vxduPSwZJPWBxEzv4yH1wYLJGUHX4Q==}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -1036,10 +1012,6 @@ packages:
     engines: {node: '>=4.2.0'}
     hasBin: true
 
-  universalify@2.0.1:
-    resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
-    engines: {node: '>= 10.0.0'}
-
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
@@ -1327,8 +1299,6 @@ snapshots:
 
   buffer-crc32@0.2.13: {}
 
-  builtin-modules@3.3.0: {}
-
   callsites@3.1.0: {}
 
   chalk@4.1.2:
@@ -1376,8 +1346,6 @@ snapshots:
   doctrine@3.0.0:
     dependencies:
       esutils: 2.0.3
-
-  dotenv@16.6.1: {}
 
   es6-promise@3.3.1: {}
 
@@ -1594,12 +1562,6 @@ snapshots:
 
   font-list@1.6.0: {}
 
-  fs-extra@11.3.5:
-    dependencies:
-      graceful-fs: 4.2.11
-      jsonfile: 6.2.1
-      universalify: 2.0.1
-
   fs.realpath@1.0.0: {}
 
   functional-red-black-tree@1.0.1: {}
@@ -1681,12 +1643,6 @@ snapshots:
   json-schema-traverse@0.4.1: {}
 
   json-stable-stringify-without-jsonify@1.0.1: {}
-
-  jsonfile@6.2.1:
-    dependencies:
-      universalify: 2.0.1
-    optionalDependencies:
-      graceful-fs: 4.2.11
 
   keyv@4.5.4:
     dependencies:
@@ -1926,8 +1882,6 @@ snapshots:
   type-fest@0.20.2: {}
 
   typescript@4.7.4: {}
-
-  universalify@2.0.1: {}
 
   uri-js@4.4.1:
     dependencies:
