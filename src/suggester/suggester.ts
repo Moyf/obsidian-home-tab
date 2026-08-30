@@ -288,22 +288,29 @@ export abstract class TextInputSuggester<T> implements ISuggester{
 export abstract class PopoverTextInputSuggester<T> extends TextInputSuggester<T>{
     private popperInstance: PopperInstance
     private popperWrapper: HTMLElement
-    
+
     constructor(app: App, inputEl: HTMLInputElement, viewOptions?: suggesterViewOptions){
-        super(app, inputEl, app.dom.appContainerEl, viewOptions)
+        // Mount suggestions into the window that owns the input, so popout
+        // windows (e.g. the detached settings window in Obsidian 1.13+) get
+        // their own popover instead of one trapped behind the main window.
+        // Popout windows mirror the main window DOM structure (.app-container).
+        const ownerDoc = inputEl.ownerDocument
+        const ownerAppContainer = ownerDoc.querySelector('.app-container') as HTMLElement | null
+        super(app, inputEl, ownerAppContainer ?? app.dom.appContainerEl, viewOptions)
     }
 
     getContainerEl(): HTMLElement {
-        if(document.contains(this.popperWrapper)) return this.popperWrapper
+        const ownerDoc = this.inputEl.ownerDocument
+        if(ownerDoc.contains(this.popperWrapper)) return this.popperWrapper
         this.popperWrapper = this.suggestionParentContainer.createDiv('popper-wrapper')
         // Render element on top of modals
         this.popperWrapper.setCssProps({ zIndex: 'var(--layer-menu)' })
 
         const isPhone = Platform.isPhone
         // On phones place popover on bottom of the screen
-        const popperReference = isPhone ? document.body : this.inputEl
+        const popperReference = isPhone ? ownerDoc.body : this.inputEl
         if(isPhone){this.popperWrapper.setCssStyles({ width: '100%' })}
-        
+
         this.popperInstance = createPopper(popperReference, this.popperWrapper, {
             placement: 'bottom-start',
             modifiers: [{
@@ -321,7 +328,7 @@ export abstract class PopoverTextInputSuggester<T> extends TextInputSuggester<T>
         if(this.popperInstance){
             this.popperInstance.destroy()
         }
-        if(document.body.contains(this.popperWrapper)){
+        if(this.inputEl.ownerDocument.body.contains(this.popperWrapper)){
             this.popperWrapper.detach()
         }
     }

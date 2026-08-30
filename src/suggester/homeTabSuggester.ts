@@ -114,7 +114,8 @@ export default class HomeTabFileSuggester extends TextInputSuggester<Fuse.FuseRe
         
         // 如果是通过 blur 事件触发的 close，检查设置
         // 通过检查当前焦点来判断是否是 blur 事件触发的
-        if (document.activeElement !== this.inputEl) {
+        // (popout-safe: the input may live in another window than the plugin)
+        if (this.inputEl.ownerDocument.activeElement !== this.inputEl) {
             // 当前元素失去焦点，检查 hideOnBlur 设置
             if (!(this.plugin.settings.hideOnBlur ?? true)) {
                 // 如果设置为不隐藏，则不关闭
