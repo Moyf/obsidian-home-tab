@@ -106,7 +106,9 @@ export class ParticleWordmarkEngine {
 
     private readonly handleVisibilityChange = (): void => {
         if (this.destroyed) return
-        if (document.hidden) {
+        // The view (and therefore the container) may live in a popout window:
+        // track THAT document's visibility, not the main window's.
+        if (this.container.ownerDocument.hidden) {
             this.stopLoop()
         } else if (this.canvas) {
             this.startLoop()
@@ -141,7 +143,8 @@ export class ParticleWordmarkEngine {
     constructor(container: HTMLElement, options: ParticleWordmarkOptions) {
         this.container = container
         this.options = options
-        this.repulsionRadius = options.repulsionRadius * ('ontouchstart' in window ? TOUCH_REPULSION_FACTOR : 1)
+        // Resolve from the window that hosts the container (popout-safe)
+        this.repulsionRadius = options.repulsionRadius * ('ontouchstart' in (container.ownerDocument.defaultView ?? window) ? TOUCH_REPULSION_FACTOR : 1)
         this.repulsionStrength = options.repulsionStrength
         this.zoom = Math.min(Math.max(options.zoom, 1), MAX_ZOOM)
     }
@@ -162,8 +165,10 @@ export class ParticleWordmarkEngine {
         const sources = this.collectSources(containerRect)
         if (sources.ops.length === 0) return false
 
-        const scale = Math.max(2, window.devicePixelRatio || 1)
-        const offscreen = createEl('canvas')
+        // Popout windows may sit on a different display: resolve the pixel
+        // ratio from the container's own window.
+        const scale = Math.max(2, this.container.ownerDocument.defaultView?.devicePixelRatio || 1)
+        const offscreen = this.container.ownerDocument.createElement('canvas')
         offscreen.width = Math.ceil(containerRect.width * scale)
         offscreen.height = Math.ceil(containerRect.height * scale)
         const offscreenContext = offscreen.getContext('2d')
@@ -228,8 +233,8 @@ export class ParticleWordmarkEngine {
         const contentRect = this.resolveContentRect()
         if (contentRect.width <= 0 || contentRect.height <= 0) return
 
-        const scale = Math.max(2, window.devicePixelRatio || 1)
-        const offscreen = createEl('canvas')
+        const scale = Math.max(2, this.container.ownerDocument.defaultView?.devicePixelRatio || 1)
+        const offscreen = this.container.ownerDocument.createElement('canvas')
         offscreen.width = Math.ceil(contentRect.width * scale)
         offscreen.height = Math.ceil(contentRect.height * scale)
         const offscreenContext = offscreen.getContext('2d')
@@ -331,7 +336,8 @@ export class ParticleWordmarkEngine {
 
     /** Draws the heading text with the element's computed font, color and alignment. */
     private drawText(context: CanvasRenderingContext2D, element: HTMLHeadingElement, offsetX: number, offsetY: number): void {
-        const style = window.getComputedStyle(element)
+        // Computed styles must be resolved by the element's own window (popout-safe)
+        const style = (element.ownerDocument.defaultView ?? window).getComputedStyle(element)
         context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
         context.fillStyle = style.color
         context.textBaseline = 'alphabetic'
@@ -377,7 +383,7 @@ export class ParticleWordmarkEngine {
                 clone.setAttribute('height', String(rect.height))
                 clone.style.width = `${rect.width}px`
                 clone.style.height = `${rect.height}px`
-                clone.setAttribute('color', window.getComputedStyle(element).color)
+                clone.setAttribute('color', (element.ownerDocument.defaultView ?? window).getComputedStyle(element).color)
             }
             const serialized = new XMLSerializer().serializeToString(clone)
             const image = new Image()
@@ -439,7 +445,7 @@ export class ParticleWordmarkEngine {
         this.hideCapturedElements(sources.hiddenElements)
         this.container.addEventListener('mousemove', this.handleMouseMove, { passive: true })
         this.container.addEventListener('mouseleave', this.handleMouseLeave)
-        document.addEventListener('visibilitychange', this.handleVisibilityChange)
+        this.container.ownerDocument.addEventListener('visibilitychange', this.handleVisibilityChange)
         this.resizeObserver = new ResizeObserver(this.handleResize)
         this.resizeObserver.observe(this.container)
         this.startLoop()
@@ -457,9 +463,8 @@ export class ParticleWordmarkEngine {
     }
 
     private installCanvas(): void {
-        const canvas = this.container.createEl('canvas', {
-            cls: 'home-tab-particle-canvas'
-        })
+        const canvas = this.container.ownerDocument.createElement('canvas')
+        canvas.className = 'home-tab-particle-canvas'
         canvas.width = Math.ceil(this.cssWidth * this.scale)
         canvas.height = Math.ceil(this.cssHeight * this.scale)
         // The zoomed canvas is centered on the container box: it overflows
@@ -485,6 +490,7 @@ export class ParticleWordmarkEngine {
 
         this.originalContainerPosition = this.container.style.position
         if (!this.container.style.position) this.container.setCssStyles({ position: 'relative' })
+        this.container.appendChild(canvas)
         this.canvas = canvas
         this.renderContext = context
         window.requestAnimationFrame(() => {
@@ -519,7 +525,7 @@ export class ParticleWordmarkEngine {
         }
         this.container.removeEventListener('mousemove', this.handleMouseMove)
         this.container.removeEventListener('mouseleave', this.handleMouseLeave)
-        document.removeEventListener('visibilitychange', this.handleVisibilityChange)
+        this.container.ownerDocument.removeEventListener('visibilitychange', this.handleVisibilityChange)
         this.stopLoop()
         if (this.canvas) {
             this.canvas.remove()
