@@ -480,11 +480,11 @@ export class HomeTabSettingTab extends PluginSettingTab {
                                         visible: () => s.particleEffect,
                                     },
                                     {
-                                        ...this.sliderWithReset('particleEffectSpacing', t.setting.particleEffectSpacing.name, t.setting.particleEffectSpacing.desc, 2, 10, 0.5),
+                                        ...this.sliderWithReset('particleEffectSpacing', t.setting.particleEffectSpacing.name, t.setting.particleEffectSpacing.desc, 1, 8, 0.5),
                                         visible: () => s.particleEffect,
                                     },
                                     {
-                                        ...this.sliderWithReset('particleEffectDotSize', t.setting.particleEffectDotSize.name, t.setting.particleEffectDotSize.desc, 0.5, 3, 0.1),
+                                        ...this.sliderWithReset('particleEffectDotSize', t.setting.particleEffectDotSize.name, t.setting.particleEffectDotSize.desc, 0.2, 3, 0.1),
                                         visible: () => s.particleEffect,
                                     },
                                 ],
