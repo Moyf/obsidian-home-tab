@@ -379,11 +379,18 @@ export class ParticleWordmarkEngine {
             const rect = element.getBoundingClientRect()
             const clone = element.cloneNode(true)
             if (clone.instanceOf(SVGSVGElement)) {
+                const style = (element.ownerDocument.defaultView ?? window).getComputedStyle(element)
                 clone.setAttribute('width', String(rect.width))
                 clone.setAttribute('height', String(rect.height))
                 clone.style.width = `${rect.width}px`
                 clone.style.height = `${rect.height}px`
-                clone.setAttribute('color', (element.ownerDocument.defaultView ?? window).getComputedStyle(element).color)
+                clone.setAttribute('color', style.color)
+                // Strokes may reference CSS variables (e.g. var(--interactive-accent))
+                // that do not resolve inside a standalone SVG image: bake the
+                // computed value in so the rasterized icon keeps its color.
+                if (style.stroke && style.stroke !== 'none') {
+                    clone.setAttribute('stroke', style.stroke)
+                }
             }
             const serialized = new XMLSerializer().serializeToString(clone)
             const image = new Image()
