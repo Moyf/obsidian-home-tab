@@ -30,7 +30,10 @@ export class bookmarkedFilesManager extends Component{
         this.loadStoredBookmarkedFiles()
         this.updateBookmarkedFiles()
         // Update stored bookmarked files list when a file is bookmarked or unbookmarked
-        this.registerEvent(this.app.internalPlugins.getPluginById('bookmarks').instance.on('changed', () => this.updateBookmarkedFiles()))
+        const bookmarksPlugin = this.app.internalPlugins.getPluginById('bookmarks')
+        if(bookmarksPlugin){
+            this.registerEvent(bookmarksPlugin.instance.on('changed', () => this.updateBookmarkedFiles()))
+        }
     }
 
     private updateBookmarkedFiles(): void{
@@ -50,7 +53,7 @@ export class bookmarkedFilesManager extends Component{
             return updatedArray
         })
 
-        this.storeBookmarkedFiles()
+        void this.storeBookmarkedFiles()
     }
 
     public updateFileIcon(file: TFile, iconId: LucideIcon): void{
@@ -60,17 +63,17 @@ export class bookmarkedFilesManager extends Component{
             return filesArray
         })
 
-        this.storeBookmarkedFiles()
+        void this.storeBookmarkedFiles()
     }
 
     private getBookmarkedFiles(): TFile[]{
         if(this.app.internalPlugins.getPluginById('bookmarks')){
-            const bookmarkedItems = app.internalPlugins.plugins.bookmarks.instance.getBookmarks()
+            const bookmarkedItems = this.app.internalPlugins.plugins.bookmarks.instance.getBookmarks()
             const bookmarkedFiles: TFile[] = []
     
             bookmarkedItems.forEach((item: BookmarkItem) => {
                 if (item.type === 'file'){
-                    const file = app.vault.getAbstractFileByPath(item.path)
+                    const file = this.app.vault.getAbstractFileByPath(item.path)
                     if (file instanceof TFile){
                         bookmarkedFiles.push(file)
                     }

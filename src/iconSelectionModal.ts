@@ -71,7 +71,9 @@ export class IconSelectionModal extends Modal{
                 .setButtonText("Set icon")
                 .setCta()
                 .onClick(() => {
-                    this.icon ? this.onSubmit(this.icon as LucideIcon) : null
+                    if(this.icon){
+                        this.onSubmit(this.icon as LucideIcon)
+                    }
                     this.close()
                 }))
     }
