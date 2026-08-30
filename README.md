@@ -84,8 +84,8 @@ The plugin may not work with (or interfere with) other plugins that replace the 
 
 ---
 # How to install
-The plugin will be available directly from the [Obsidian plugin browser](https://obsidian.md/plugins?id=home-tab-plus).
-Alternatively, you can install with [BRAT](https://github.com/TfTHacker/obsidian42-brat) by using the following links: `https://github.com/Moyf/obsidian-home-tab` or `Moyf/obsidian-home-tab`.
+The plugin will be available directly from the [Obsidian plugin browser](https://obsidian.md/plugins?id=first-light).
+Alternatively, you can install with [BRAT](https://github.com/TfTHacker/obsidian42-brat) by using the following links: `https://github.com/Moyf/first-light` or `Moyf/first-light`.
 
 ---
 # Acknowledgments
