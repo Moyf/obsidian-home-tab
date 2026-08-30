@@ -91,11 +91,11 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
     particleEffect: false,
     particleEffectMonochrome: false,
     particleEffectColor: '#6C31E3',
-    particleEffectScale: 2,
-    particleEffectSpacing: 4.5,
-    particleEffectDotSize: 1.3,
-    particleEffectDisturbRadius: 84,
-    particleEffectDisturbStrength: 0.8,
+    particleEffectScale: 1.9,
+    particleEffectSpacing: 2,
+    particleEffectDotSize: 0.5,
+    particleEffectDisturbRadius: 124,
+    particleEffectDisturbStrength: 1.8,
     maxResults: 5,
     showbookmarkedFiles: app.internalPlugins.getPluginById('bookmarks') ? true : false,
     showRecentFiles: true,
@@ -126,7 +126,7 @@ export const DEFAULT_SETTINGS: HomeTabSettings = {
 
 export class HomeTabSettingTab extends PluginSettingTab {
     plugin: HomeTab
-    icon: IconName = 'house'
+    icon: IconName = 'tower-control'
 
     /** Settings whose change requires rebuilding the open Home tab views */
     private static readonly REFRESH_OPEN_VIEWS_KEYS: ReadonlySet<string> = new Set([
