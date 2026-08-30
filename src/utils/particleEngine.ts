@@ -163,7 +163,7 @@ export class ParticleWordmarkEngine {
         if (sources.ops.length === 0) return false
 
         const scale = Math.max(2, window.devicePixelRatio || 1)
-        const offscreen = document.createElement('canvas')
+        const offscreen = this.container.createEl('canvas')
         offscreen.width = Math.ceil(containerRect.width * scale)
         offscreen.height = Math.ceil(containerRect.height * scale)
         const offscreenContext = offscreen.getContext('2d')
@@ -222,14 +222,14 @@ export class ParticleWordmarkEngine {
      */
     private async resample(): Promise<void> {
         const token = ++this.buildToken
-        console.log('[home-tab] particle: resampling (in place)')
+
         // The content element never carries zoom padding (the wrapper does),
         // so this is the exact same coordinate space build() measures in.
         const contentRect = this.resolveContentRect()
         if (contentRect.width <= 0 || contentRect.height <= 0) return
 
         const scale = Math.max(2, window.devicePixelRatio || 1)
-        const offscreen = document.createElement('canvas')
+        const offscreen = this.container.createEl('canvas')
         offscreen.width = Math.ceil(contentRect.width * scale)
         offscreen.height = Math.ceil(contentRect.height * scale)
         const offscreenContext = offscreen.getContext('2d')
@@ -264,8 +264,10 @@ export class ParticleWordmarkEngine {
                 this.canvas.height = height
                 this.renderContext.setTransform(scale, 0, 0, scale, 0, 0)
             }
-            this.canvas.style.width = `${this.cssWidth}px`
-            this.canvas.style.height = `${this.cssHeight}px`
+            this.canvas.setCssStyles({
+                width: `${this.cssWidth}px`,
+                height: `${this.cssHeight}px`
+            })
         } catch (error) {
             // A remote logo image without CORS headers taints the canvas and
             // makes getImageData throw: fall back to the normal rendering.
@@ -370,7 +372,7 @@ export class ParticleWordmarkEngine {
         return new Promise((resolve, reject) => {
             const rect = element.getBoundingClientRect()
             const clone = element.cloneNode(true)
-            if (clone instanceof SVGSVGElement) {
+            if (clone.instanceOf(SVGSVGElement)) {
                 clone.setAttribute('width', String(rect.width))
                 clone.setAttribute('height', String(rect.height))
                 clone.style.width = `${rect.width}px`
@@ -455,24 +457,26 @@ export class ParticleWordmarkEngine {
     }
 
     private installCanvas(): void {
-        const canvas = document.createElement('canvas')
-        canvas.className = 'home-tab-particle-canvas'
+        const canvas = this.container.createEl('canvas', {
+            cls: 'home-tab-particle-canvas'
+        })
         canvas.width = Math.ceil(this.cssWidth * this.scale)
         canvas.height = Math.ceil(this.cssHeight * this.scale)
         // The zoomed canvas is centered on the container box: it overflows
         // symmetrically with transparent pixels; the mouse position is mapped
         // with mouseOffsetX/Y.
-        canvas.style.position = 'absolute'
-        canvas.style.top = '50%'
-        canvas.style.left = '50%'
-        canvas.style.transform = 'translate(-50%, -50%)'
-        canvas.style.width = `${this.cssWidth}px`
-        canvas.style.height = `${this.cssHeight}px`
-        canvas.style.display = 'block'
-        canvas.style.pointerEvents = 'none'
-        // Fade in once painted, so the takeover does not pop in abruptly.
-        canvas.style.opacity = '0'
-        canvas.style.transition = 'opacity 0.4s ease'
+        canvas.setCssStyles({
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: `${this.cssWidth}px`,
+            height: `${this.cssHeight}px`,
+            display: 'block',
+            pointerEvents: 'none',
+            opacity: '0',
+            transition: 'opacity 0.4s ease'
+        })
 
         const context = canvas.getContext('2d')
         if (!context) return
@@ -480,12 +484,11 @@ export class ParticleWordmarkEngine {
         context.setTransform(this.scale, 0, 0, this.scale, 0, 0)
 
         this.originalContainerPosition = this.container.style.position
-        if (!this.container.style.position) this.container.style.position = 'relative'
-        this.container.appendChild(canvas)
+        if (!this.container.style.position) this.container.setCssStyles({ position: 'relative' })
         this.canvas = canvas
         this.renderContext = context
-        requestAnimationFrame(() => {
-            if (this.canvas === canvas) canvas.style.opacity = '1'
+        window.requestAnimationFrame(() => {
+            if (this.canvas === canvas) canvas.setCssStyles({ opacity: '1' })
         })
     }
 
@@ -493,14 +496,14 @@ export class ParticleWordmarkEngine {
     private hideCapturedElements(elements: HTMLElement[]): void {
         this.hiddenElements = elements.map((element) => {
             const previousVisibility = element.style.visibility
-            element.style.visibility = 'hidden'
+            element.setCssStyles({ visibility: 'hidden' })
             return { element, previousVisibility }
         })
     }
 
     private restoreCapturedElements(): void {
         for (const { element, previousVisibility } of this.hiddenElements) {
-            element.style.visibility = previousVisibility
+            element.setCssStyles({ visibility: previousVisibility })
         }
         this.hiddenElements = []
     }
@@ -525,7 +528,7 @@ export class ParticleWordmarkEngine {
         }
         this.restoreCapturedElements()
         if (this.originalContainerPosition !== null) {
-            this.container.style.position = this.originalContainerPosition
+            this.container.setCssStyles({ position: this.originalContainerPosition })
             this.originalContainerPosition = null
         }
         this.particles = []
@@ -542,9 +545,9 @@ export class ParticleWordmarkEngine {
             }
             this.step()
             this.render()
-            this.rafId = requestAnimationFrame(frame)
+            this.rafId = window.requestAnimationFrame(frame)
         }
-        this.rafId = requestAnimationFrame(frame)
+        this.rafId = window.requestAnimationFrame(frame)
     }
 
     private stopLoop(): void {
