@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.2] - 2026-08-30
+
+### Features
+
+- Add an "Individual margins" toggle for the logo: when enabled, the four sides (top / right / bottom / left) can each be tuned separately; when disabled (default), the single uniform margin applies
+- Move "Logo scale" to the top of the Logo layout settings group
+
+### Bug Fixes
+
+- Fix the particle wordmark occasionally not refreshing after settings changes: logo position, logo scale and logo margins are now part of the rebuild signature (previously only detected when the container happened to resize), a tripped rebuild circuit breaker now retries after a cooldown instead of dropping the pending change, and a rapid-settings race no longer tears down the freshly built engine
+
 ## [1.3.1] - 2026-08-30
 
 ### Compatibility
