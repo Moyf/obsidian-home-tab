@@ -37,13 +37,12 @@ export class MatchAnalyzer {
      */
     resetForNewSearch() {
         this.hasAnalyzed = false;
-        if (this.settings.debugMode) {
-            console.log('[MatchAnalyzer] 🔄 RESET for new search');
-        }
+        this.debug('🔄 RESET for new search');
     }
     
-    private debug(...args: any[]) {
+    private debug(...args: unknown[]) {
         if (this.settings.debugMode) {
+            // eslint-disable-next-line no-console -- Intentional logging behind the debug-mode setting, per the "Debug mode" feature
             console.log('[MatchAnalyzer]', ...args)
         }
     }

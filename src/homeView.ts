@@ -2,6 +2,7 @@ import { FileView, MarkdownRenderChild, View, WorkspaceLeaf } from "obsidian";
 import type HomeTab from "./main";
 import Homepage from './ui/homepage.svelte'
 import HomeTabSearchBar from "./homeTabSearchbar";
+import { t } from "./i18n";
 
 export const VIEW_TYPE = "home-tab-view";
 
@@ -86,7 +87,7 @@ export class HomeTabView extends FileView{
     }
     
     getDisplayText(): string {
-        return 'Home tab'
+        return t().viewName
     }
 
     async onOpen(): Promise<void> {

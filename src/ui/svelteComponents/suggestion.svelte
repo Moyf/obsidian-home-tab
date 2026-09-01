@@ -14,6 +14,7 @@
     export let suggestionAuxClass: string | undefined = undefined
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events (keyboard selection handled by the search input scope, see suggester.ts) -->
 <div class="{suggestionItemClass ?? 'suggestion-item mod-complex'}" 
     class:is-selected="{selectedItemIndex === index}"
     on:mousemove="{() => suggester.setSelectedItemIndex(index)}"

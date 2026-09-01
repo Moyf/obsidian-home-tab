@@ -5,14 +5,14 @@
  * @param immediate 是否立即执行
  * @returns 防抖后的函数
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
     func: T,
     wait: number,
     immediate = false
 ): (...args: Parameters<T>) => void {
-    let timeout: NodeJS.Timeout | null = null;
+    let timeout: number | null = null;
 
-    return function(this: any, ...args: Parameters<T>): void {
+    return function(this: unknown, ...args: Parameters<T>): void {
         const later = () => {
             timeout = null;
             if (!immediate) {
@@ -23,10 +23,10 @@ export function debounce<T extends (...args: any[]) => any>(
         const callNow = immediate && !timeout;
 
         if (timeout) {
-            clearTimeout(timeout);
+            window.clearTimeout(timeout);
         }
 
-        timeout = setTimeout(later, wait);
+        timeout = window.setTimeout(later, wait);
 
         if (callNow) {
             func.apply(this, args);

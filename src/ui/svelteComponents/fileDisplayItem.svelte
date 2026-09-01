@@ -11,6 +11,7 @@
     export let pluginSettings: HomeTabSettings
     export let contextualMenu: Menu
     export let customIcon: LucideIcon | undefined = undefined
+    export let selected: boolean = false
 
     // Trim filename if too long
     // const filename = file.basename.length > 38 ? file.basename.slice(0,35) + '...' : file.basename
@@ -33,8 +34,10 @@
 </script>
 
 <div class="home-tab-file-item" class:use-accent-color="{pluginSettings.selectionHighlight === 'accentColor'}"
+    class:selected="{selected}"
     on:mousedown|preventDefault="{e => handleMouseClick(e, file)}">
     
+    <!-- svelte-ignore a11y-click-events-have-key-events (mouse-driven UI, keyboard users have alternative paths) -->
     <div class="home-tab-file-item-remove_btn" aria-label="File options"
         on:click={(e) => {
             contextualMenu.showAtMouseEvent(e)
@@ -90,10 +93,12 @@
         position: relative;
     }
 
-    .home-tab-file-item:hover{
+    .home-tab-file-item:hover,
+    .home-tab-file-item.selected{
         background-color: var(--background-modifier-hover);
     }
-    .home-tab-file-item.use-accent-color:hover{
+    .home-tab-file-item.use-accent-color:hover,
+    .home-tab-file-item.use-accent-color.selected{
         color: white;
         background: var(--interactive-accent);
     }

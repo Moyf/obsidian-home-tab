@@ -2,7 +2,7 @@
 	"id": "home-tab-mod",
 	"name": "Home tab (Mod)",
 	"version": "v0.0.3-beta",
-	"minAppVersion": "1.8.0",
+	"minAppVersion": "1.13.0",
 	"description": "A browser-like search tab for your local files.",
 	"author": "Renso, Moy",
 	"authorUrl": "https://github.com/olrenso",

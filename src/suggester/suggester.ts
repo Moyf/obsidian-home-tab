@@ -24,24 +24,24 @@ export interface suggesterViewOptions{
     // additionalComponentProps?: []
 }
 
-interface ISuggester{
-    getSuggestions: Function
-    useSelectedItem: Function
-    getDisplayElementProps: Function
-    scrollSelectedItemIntoView: Function
-    onNoSuggestion: Function
-    closeAfterUse?: Function  // 添加可选的关闭方法
+interface ISuggester<T = unknown>{
+    getSuggestions: (input: string) => T[] | Promise<T[]>
+    useSelectedItem: (item: T, middleClick?: boolean) => void
+    getDisplayElementProps: (suggestion: T) => Record<string, unknown>
+    scrollSelectedItemIntoView: () => void
+    onNoSuggestion: () => void
+    closeAfterUse?: () => void  // 添加可选的关闭方法
 }
 
 export class Suggester<T>{
-    private ISuggester: ISuggester
+    private ISuggester: ISuggester<T>
     private suggestions: T[]
     private selectedItemIndex: number
     suggestionsContainer: Writable<HTMLElement>
     suggestionsStore: Writable<T[]>
     selectedItemIndexStore: Writable<number>
 
-    constructor(ISuggester: ISuggester, scope: Scope){
+    constructor(ISuggester: ISuggester<T>, scope: Scope){
         this.ISuggester = ISuggester
 
         // Svelte store variables
@@ -126,10 +126,10 @@ export abstract class TextInputSuggester<T> implements ISuggester{
 
     protected displayedSuggestions: boolean
     
-    protected closingAnimationTimeout: NodeJS.Timeout
+    protected closingAnimationTimeout: number
     protected closingAnimationRunning: boolean
 
-    private inputListener: (this: HTMLInputElement, ev: Event) => any
+    private inputListener: (this: HTMLInputElement, ev: Event) => void
     private lastValue: string
 
     constructor(app: App, inputEl: HTMLInputElement, suggestionParentContainer: HTMLElement, viewOptions?: suggesterViewOptions, searchDelay?: number){
@@ -233,7 +233,7 @@ export abstract class TextInputSuggester<T> implements ISuggester{
         // Allow svelte to run the animation, then remove the component(s)
         if(this.suggesterView){
             this.closingAnimationRunning = true
-            this.closingAnimationTimeout = setTimeout(() => {
+            this.closingAnimationTimeout = window.setTimeout(() => {
                 this.suggesterView?.$destroy()
                 this.suggesterView = undefined
                 this.closingAnimationRunning = false
@@ -244,7 +244,7 @@ export abstract class TextInputSuggester<T> implements ISuggester{
         this.onClose()
     }
     abortClosingAnimation(): void{
-        clearTimeout(this.closingAnimationTimeout)
+        window.clearTimeout(this.closingAnimationTimeout)
         this.suggesterView?.$destroy()
         this.suggesterView = undefined
         this.closingAnimationRunning = false
@@ -281,30 +281,36 @@ export abstract class TextInputSuggester<T> implements ISuggester{
 
     abstract getSuggestions(input: string): T[] | Promise<T[]>
     abstract useSelectedItem(item: T, middleClick?: boolean): void
-    abstract getDisplayElementProps(suggestion: T): {}
+    abstract getDisplayElementProps(suggestion: T): Record<string, unknown>
     abstract getDisplayElementComponentType(): typeof SvelteComponent
 }
 
 export abstract class PopoverTextInputSuggester<T> extends TextInputSuggester<T>{
     private popperInstance: PopperInstance
     private popperWrapper: HTMLElement
-    
+
     constructor(app: App, inputEl: HTMLInputElement, viewOptions?: suggesterViewOptions){
-        super(app, inputEl, app.dom.appContainerEl, viewOptions)
+        // Mount suggestions into the window that owns the input, so popout
+        // windows (e.g. the detached settings window in Obsidian 1.13+) get
+        // their own popover instead of one trapped behind the main window.
+        // Popout windows mirror the main window DOM structure (.app-container).
+        const ownerDoc = inputEl.ownerDocument
+        const ownerAppContainer = ownerDoc.querySelector<HTMLElement>('.app-container')
+        super(app, inputEl, ownerAppContainer ?? app.dom.appContainerEl, viewOptions)
     }
 
     getContainerEl(): HTMLElement {
-        if(document.contains(this.popperWrapper)) return this.popperWrapper
+        const ownerDoc = this.inputEl.ownerDocument
+        if(ownerDoc.contains(this.popperWrapper)) return this.popperWrapper
         this.popperWrapper = this.suggestionParentContainer.createDiv('popper-wrapper')
         // Render element on top of modals
-        this.popperWrapper.style.zIndex = 'var(--layer-menu)' 
+        this.popperWrapper.setCssProps({ zIndex: 'var(--layer-menu)' })
 
-        // @ts-ignore
         const isPhone = Platform.isPhone
         // On phones place popover on bottom of the screen
-        const popperReference = isPhone ? document.body : this.inputEl
-        if(isPhone){this.popperWrapper.style.width = '100%'}
-        
+        const popperReference = isPhone ? ownerDoc.body : this.inputEl
+        if(isPhone){this.popperWrapper.setCssStyles({ width: '100%' })}
+
         this.popperInstance = createPopper(popperReference, this.popperWrapper, {
             placement: 'bottom-start',
             modifiers: [{
@@ -322,13 +328,13 @@ export abstract class PopoverTextInputSuggester<T> extends TextInputSuggester<T>
         if(this.popperInstance){
             this.popperInstance.destroy()
         }
-        if(document.body.contains(this.popperWrapper)){
+        if(this.inputEl.ownerDocument.body.contains(this.popperWrapper)){
             this.popperWrapper.detach()
         }
     }
 
     abstract getSuggestions(input: string): T[]
     abstract useSelectedItem(item: T): void
-    abstract getDisplayElementProps(suggestion: T): {}
+    abstract getDisplayElementProps(suggestion: T): Record<string, unknown>
     abstract getDisplayElementComponentType(): typeof SvelteComponent
 }

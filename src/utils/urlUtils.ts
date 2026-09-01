@@ -15,6 +15,14 @@ export function isValidUrl(url: string): boolean {
         }
     }
 
+    // 过滤纯数字/版本号形式（如 "1.4"、"1.4.1"），它们不是网址
+    if (/^[\d.]+$/.test(url)) {
+        // 例外：形如 IPv4 的地址（如 127.0.0.1）仍视为网址
+        const ipv4Match = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(url);
+        const isValidIpv4 = ipv4Match !== null && ipv4Match.slice(1).every(part => Number(part) <= 255);
+        if (!isValidIpv4) return false;
+    }
+
     // 如果包含常见的顶级域名，很可能是一个 URL
     const commonTlds = [
         // 通用顶级域名

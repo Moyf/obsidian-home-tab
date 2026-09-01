@@ -33,10 +33,7 @@ export class IconSelectionModal extends Modal{
 
         iconSetting
             .addSearch((text) => {
-                new iconSuggester(this.app, text.inputEl, {
-                    isScrollable: true,
-                    style: `max-height: 200px`}, 
-                    true)
+                new iconSuggester(this.app, text.inputEl, true)
 
                 text
                 .setPlaceholder('Type to start search...')
@@ -71,7 +68,9 @@ export class IconSelectionModal extends Modal{
                 .setButtonText("Set icon")
                 .setCta()
                 .onClick(() => {
-                    this.icon ? this.onSubmit(this.icon as LucideIcon) : null
+                    if(this.icon){
+                        this.onSubmit(this.icon as LucideIcon)
+                    }
                     this.close()
                 }))
     }

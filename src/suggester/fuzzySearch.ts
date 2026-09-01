@@ -1,10 +1,11 @@
 import Fuse from "fuse.js";
 import type { TFile } from "obsidian";
+import type { App } from "obsidian";
 import { getImageFiles, getMarkdownSearchFiles} from "src/utils/getFilesUtils";
 import type { FileType } from "src/utils/getFileTypeUtils"
 import type { SurfingItem } from "./surfingSuggester";
 
-export const DEFAULT_FUSE_OPTIONS: Fuse.IFuseOptions<any> = {
+export const DEFAULT_FUSE_OPTIONS: Fuse.IFuseOptions<unknown> = {
     includeScore : true,
     includeMatches : true,
     findAllMatches : true,
@@ -163,8 +164,8 @@ export class ArrayFuzzySearch extends fuzzySearch<string>{
  * @description Search created markdown files by basename and aliases.
  */
 export class MarkdownFileFuzzySearch extends fuzzySearch<MarkdownSearchFile>{
-    constructor(fileList?: MarkdownSearchFile[], searchOptions?: Fuse.IFuseOptions<MarkdownSearchFile>){
-        const searchArray = fileList ?? getMarkdownSearchFiles()
+    constructor(app: App, fileList?: MarkdownSearchFile[], searchOptions?: Fuse.IFuseOptions<MarkdownSearchFile>){
+        const searchArray = fileList ?? getMarkdownSearchFiles(app)
         super(searchArray, searchOptions)
     }
 
@@ -240,8 +241,8 @@ export class FileFuzzySearch extends fuzzySearch<SearchFile>{
  * @param imageList Optional list of TFile, if not given the search will be in the entire vault.
  */
 export class ImageFileFuzzySearch extends fuzzySearch<TFile>{
-    constructor(imageList?: TFile[], searchOptions?: Fuse.IFuseOptions<TFile>){
-        const searchArray = imageList ?? getImageFiles()
+    constructor(app: App, imageList?: TFile[], searchOptions?: Fuse.IFuseOptions<TFile>){
+        const searchArray = imageList ?? getImageFiles(app)
         super(searchArray, searchOptions)
     }
 }

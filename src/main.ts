@@ -1,16 +1,13 @@
-import { 
-	App, 
-	Plugin, 
-	WorkspaceLeaf, 
-	WorkspaceMobileDrawer, 
-	WorkspaceSplit, 
+import {
+	Plugin,
+	WorkspaceLeaf,
+	WorkspaceMobileDrawer,
 	WorkspaceTabs,
-	ItemView, 
-	ViewStateResult,
-	MarkdownView 
+	MarkdownView
 } from 'obsidian';
 import { EmbeddedHomeTab, HomeTabView, VIEW_TYPE } from 'src/homeView';
 import { HomeTabSettingTab, DEFAULT_SETTINGS, type HomeTabSettings } from './settings'
+import { t } from './i18n'
 import { pluginSettingsStore, bookmarkedFiles } from './store'
 import { RecentFileManager } from './recentFiles';
 import { bookmarkedFilesManager } from './bookmarkedFiles';
@@ -19,11 +16,13 @@ declare module 'obsidian'{
 	interface App{
 		internalPlugins: InternalPlugins
 		plugins: Plugins
-		dom: any
+		dom: {
+			appContainerEl: HTMLElement
+		}
 		isMobile: boolean
 	}
 	interface InternalPlugins{
-		getPluginById: Function
+		getPluginById: (id: string) => BookmarksPlugin | undefined
 		plugins: {
 			bookmarks: BookmarksPlugin
 		}
@@ -36,6 +35,7 @@ declare module 'obsidian'{
 			items: BookmarkItem[]
 			getBookmarks: () => BookmarkItem[]
 			removeItem: (item: BookmarkItem) => void
+			on: (name: string, callback: () => void) => EventRef
 		}
 	}
 	interface BookmarkItem{
@@ -50,13 +50,12 @@ declare module 'obsidian'{
 		config: config
 	}
 	interface Workspace{
-		createLeafInTabGroup: Function
+		createLeafInTabGroup: () => WorkspaceLeaf
 	}
 	interface WorkspaceLeaf{
-		rebuildView: Function
+		rebuildView: () => void
 		parent: WorkspaceTabs | WorkspaceMobileDrawer
 		activeTime: number
-		app: App
 	}
 	interface WorkspaceSplit{
 		children: WorkspaceLeaf[]
@@ -73,8 +72,6 @@ export default class HomeTab extends Plugin {
 	activeEmbeddedHomeTabViews: EmbeddedHomeTab[]
 	
 	async onload() {
-		console.log('Loading home-tab plugin')
-		
 		await this.loadSettings();
 		this.addSettingTab(new HomeTabSettingTab(this.app, this))
 		this.registerView(VIEW_TYPE, (leaf) => new HomeTabView(leaf, this));		
@@ -93,11 +90,11 @@ export default class HomeTab extends Plugin {
 
 		this.addCommand({
 			id: 'open-new-home-tab',
-			name: 'Open new Home tab',
+			name: t().command.openNewTab,
 			callback: () => this.activateView(false, true)})
 		this.addCommand({
 			id: 'open-home-tab',
-			name: 'Replace current tab',
+			name: t().command.replaceCurrentTab,
 			callback: () => this.activateView(true)})
 
 		// Wait for all plugins to load before check if the bookmarked plugin is enabled
@@ -105,6 +102,10 @@ export default class HomeTab extends Plugin {
 			if(this.app.internalPlugins.getPluginById('bookmarks')){
 				this.bookmarkedFileManager = new bookmarkedFilesManager(this.app, this, bookmarkedFiles)
 				this.bookmarkedFileManager.load()
+			}
+			else{
+				// Bookmarks plugin disabled: keep the setting off (DEFAULT_SETTINGS can't check at module level)
+				this.settings.showbookmarkedFiles = false
 			}
 
 			this.registerMarkdownCodeBlockProcessor('search-bar', (source, el, ctx) => {
@@ -120,7 +121,7 @@ export default class HomeTab extends Plugin {
 				// If an Home tab leaf is already open focus it
 				const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE)
 				if(leaves.length > 0){
-					this.app.workspace.revealLeaf(leaves[0])
+					void this.app.workspace.revealLeaf(leaves[0])
 					// If more than one home tab leaf is open close them
 					leaves.forEach((leaf, index) => {
 						if(index < 1) return
@@ -146,15 +147,16 @@ export default class HomeTab extends Plugin {
 		})
 	}
 
+	// Do NOT detach leaves here: detaching would reset the leaf to its default
+	// location when the plugin is loaded again, even if the user moved it.
 	onunload(): void {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE)
 		this.activeEmbeddedHomeTabViews.forEach(view => view.unload())
 		this.recentFileManager.unload()
-		this.bookmarkedFileManager.unload()
+		this.bookmarkedFileManager?.unload()
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<HomeTabSettings>)
 	}
 
 	async saveSettings(): Promise<void> {
@@ -172,11 +174,11 @@ export default class HomeTab extends Plugin {
 		const leaf = openNewTab ? this.app.workspace.getLeaf('tab') : this.app.workspace.getMostRecentLeaf()
 		// const leaf = newTab ? this.app.workspace.getLeaf() : this.app.workspace.getMostRecentLeaf()
 		if(leaf && (overrideView || leaf.getViewState().type === 'empty')){
-			leaf.setViewState({
+			void leaf.setViewState({
 				type: VIEW_TYPE,
 			})
 			// Focus newly opened tab
-			if(openNewTab){this.app.workspace.revealLeaf(leaf)}
+			if(openNewTab){void this.app.workspace.revealLeaf(leaf)}
 		}
 	}
 

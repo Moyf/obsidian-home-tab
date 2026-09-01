@@ -1,31 +1,33 @@
-import { PopoverTextInputSuggester, type suggesterViewOptions } from "./suggester";
+import { AbstractInputSuggest, TFile, type App } from 'obsidian'
 import type Fuse from "fuse.js";
-import type { App, TFile } from "obsidian";
 import { DEFAULT_FUSE_OPTIONS, ImageFileFuzzySearch } from "./fuzzySearch";
-import FileSuggestion from "src/ui/svelteComponents/fileSuggestion.svelte";
 
-export default class ImageFileSuggester extends PopoverTextInputSuggester<Fuse.FuseResult<TFile>>{
+/**
+ * Image file suggester built on the official AbstractInputSuggest, which
+ * handles popover positioning (including popout windows) out of the box.
+ */
+export default class ImageFileSuggester extends AbstractInputSuggest<Fuse.FuseResult<TFile>>{
+    private inputEl: HTMLInputElement
     private fuzzySearch: ImageFileFuzzySearch
 
-    constructor(app: App, inputEl: HTMLInputElement, viewOptions?: suggesterViewOptions){
-        super(app, inputEl, viewOptions)
-        this.fuzzySearch = new ImageFileFuzzySearch(undefined, {...DEFAULT_FUSE_OPTIONS, ignoreLocation: true, keys: ['name']})
+    constructor(app: App, inputEl: HTMLInputElement){
+        super(app, inputEl)
+        this.inputEl = inputEl
+        this.fuzzySearch = new ImageFileFuzzySearch(app, undefined, {...DEFAULT_FUSE_OPTIONS, ignoreLocation: true, keys: ['name']})
     }
 
-    getSuggestions(input: string): Fuse.FuseResult<TFile>[] {
-        return this.fuzzySearch.filteredSearch(input, 0.25, 15)
+    getSuggestions(query: string): Fuse.FuseResult<TFile>[] {
+        return this.fuzzySearch.filteredSearch(query, 0.25, 15)
     }
 
-    useSelectedItem(selectedItem: Fuse.FuseResult<TFile>): void {
-        this.inputEl.value = selectedItem.item.path
+    renderSuggestion(suggestion: Fuse.FuseResult<TFile>, el: HTMLElement): void {
+        el.addClass('suggestion-item')
+        el.setText(suggestion.item.name)
+    }
+
+    selectSuggestion(suggestion: Fuse.FuseResult<TFile>): void {
+        this.inputEl.value = suggestion.item.path
         this.inputEl.trigger("input")
-        this.onInput().then(() => this.close())
-    }
-
-    getDisplayElementComponentType(): typeof FileSuggestion{
-        return FileSuggestion
-    }
-    getDisplayElementProps(suggestion: Fuse.FuseResult<TFile>): {displayName: string}{
-        return {displayName: suggestion.item.name}
+        this.close()
     }
 }

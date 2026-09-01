@@ -1,5 +1,6 @@
 <script lang="ts">
     import SearchBar from './searchBar.svelte';
+    import ParticleWordmark from './particleWordmark.svelte';
     import type { HomeTabSettings } from 'src/settings';
     import { pluginSettingsStore, recentFiles, bookmarkedFiles } from '../store'
     import { getIcon, View } from 'obsidian'
@@ -41,13 +42,28 @@
     const renderRecentFiles: boolean = embeddedView ? embeddedView.recentFiles : pluginSettings.showRecentFiles
     // @ts-ignore
     const renderbookmarkedFiles: boolean = embeddedView ? embeddedView.bookmarkedFiles : pluginSettings.showbookmarkedFiles
+
+    // Logo placement relative to the title (falls back to the original left layout)
+    $: logoPosition = pluginSettings?.logoPosition ?? 'left'
+
+    // Logo margins: one uniform value, or per side when individual adjustment is on
+    $: logoMargins = {
+        top: (pluginSettings?.logoMarginIndividual ? pluginSettings.logoMarginTop : pluginSettings?.logoMargin) ?? 12,
+        right: (pluginSettings?.logoMarginIndividual ? pluginSettings.logoMarginRight : pluginSettings?.logoMargin) ?? 12,
+        bottom: (pluginSettings?.logoMarginIndividual ? pluginSettings.logoMarginBottom : pluginSettings?.logoMargin) ?? 12,
+        left: (pluginSettings?.logoMarginIndividual ? pluginSettings.logoMarginLeft : pluginSettings?.logoMargin) ?? 12,
+    }
 </script>
   
 <main class="home-tab" class:embedded={embeddedView}>
     {#if !embeddedView?.searchbarOnly}
-        <div class="home-tab-wordmark-container">
+        <ParticleWordmark>
+        <div class="home-tab-wordmark-container"
+            class:logo-col={logoPosition === 'top' || logoPosition === 'bottom'}
+            class:logo-bottom={logoPosition === 'bottom'}
+            class:logo-right={logoPosition === 'right'}>
             {#if !(pluginSettings.logoType === 'none')}
-                <div class="home-tab-logo" style="margin-right: calc({pluginSettings.fontSize}/5)">
+                <div class="home-tab-logo" style:margin-top="{logoMargins.top}px" style:margin-right="{logoMargins.right}px" style:margin-bottom="{logoMargins.bottom}px" style:margin-left="{logoMargins.left}px">
                     {#if pluginSettings.logoType === 'default'}
                         <!-- New obsidian logo -->
                         <svg width="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" height="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -128,7 +144,7 @@
 
                     {:else if pluginSettings.logoType === 'lucideIcon' && !!pluginSettings.logo.lucideIcon}
                             <svg xmlns="http://www.w3.org/2000/svg"  width="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" height="calc({pluginSettings.fontSize}*{pluginSettings.logoScale})" 
-                            viewBox="0 0 24 24" fill="none" stroke="{pluginSettings.iconColorType === 'default' ? 'currentColor' : pluginSettings.iconColorType === 'accentColor' ?  'var(--interactive-accent)' : pluginSettings.iconColor}" 
+                            viewBox="0 0 24 24" fill="none" stroke="{pluginSettings.iconColorType === 'default' ? 'currentColor' : pluginSettings.iconColorType === 'accentColor' ?  'var(--interactive-accent)' : (pluginSettings.iconColor || 'currentColor')}" 
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
                             class="svg-icon lucide-{pluginSettings.logo.lucideIcon}">
                                 {@html getIcon(pluginSettings.logo.lucideIcon)?.innerHTML}
@@ -153,6 +169,7 @@
                 </h1>
             </div>
         </div>
+        </ParticleWordmark>
     {/if}
     
     <SearchBar {HomeTabSearchBar} embedded={embeddedView ? true : false}/>
@@ -162,7 +179,7 @@
     {/if}
 
     {#if plugin.recentFileManager && recentFileList.length > 0  && renderRecentFiles}
-        <RecentFiles {recentFileList} {view} {pluginSettings} recentFileManager={plugin.recentFileManager}/>
+        <RecentFiles {recentFileList} {view} {pluginSettings} recentFileManager={plugin.recentFileManager} {HomeTabSearchBar}/>
     {/if}
 </main>
   
@@ -176,6 +193,14 @@
         align-items: center;
         justify-content: center;
         margin-bottom: 50px;
+    }
+    /* Logo placement: top/bottom stack the layout, right/bottom move the logo after the title */
+    .home-tab-wordmark-container.logo-col{
+        flex-direction: column;
+    }
+    .home-tab-wordmark-container.logo-right .home-tab-logo,
+    .home-tab-wordmark-container.logo-bottom .home-tab-logo{
+        order: 2;
     }
     .home-tab:not(.embedded) .home-tab-wordmark-container{
         padding-top: 100px;
