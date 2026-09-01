@@ -5,7 +5,7 @@ import { getImageFiles, getMarkdownSearchFiles} from "src/utils/getFilesUtils";
 import type { FileType } from "src/utils/getFileTypeUtils"
 import type { SurfingItem } from "./surfingSuggester";
 
-export const DEFAULT_FUSE_OPTIONS: Fuse.IFuseOptions<any> = {
+export const DEFAULT_FUSE_OPTIONS: Fuse.IFuseOptions<unknown> = {
     includeScore : true,
     includeMatches : true,
     findAllMatches : true,

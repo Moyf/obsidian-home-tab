@@ -295,7 +295,7 @@ export abstract class PopoverTextInputSuggester<T> extends TextInputSuggester<T>
         // their own popover instead of one trapped behind the main window.
         // Popout windows mirror the main window DOM structure (.app-container).
         const ownerDoc = inputEl.ownerDocument
-        const ownerAppContainer = ownerDoc.querySelector('.app-container') as HTMLElement | null
+        const ownerAppContainer = ownerDoc.querySelector<HTMLElement>('.app-container')
         super(app, inputEl, ownerAppContainer ?? app.dom.appContainerEl, viewOptions)
     }
 
