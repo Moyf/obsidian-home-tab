@@ -128,7 +128,7 @@ export class RecentFileManager extends Component{
                 recentFiles.set(filesToLoad)
                 this.storedFilesLoaded = true
                 // Re-persist the loaded list to purge entries whose files no longer exist
-                this.storeRecentFiles()
+                void this.storeRecentFiles()
             })
         }
         else{
