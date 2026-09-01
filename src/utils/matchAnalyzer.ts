@@ -42,6 +42,7 @@ export class MatchAnalyzer {
     
     private debug(...args: unknown[]) {
         if (this.settings.debugMode) {
+            // eslint-disable-next-line no-console -- Intentional logging behind the debug-mode setting, per the "Debug mode" feature
             console.log('[MatchAnalyzer]', ...args)
         }
     }

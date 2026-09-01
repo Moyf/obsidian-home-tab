@@ -230,7 +230,7 @@ export class ParticleWordmarkEngine {
         // Popout windows may sit on a different display: resolve the pixel
         // ratio from the container's own window.
         const scale = Math.max(2, this.container.ownerDocument.defaultView?.devicePixelRatio || 1)
-        const offscreen = this.container.ownerDocument.createElement('canvas')
+        const offscreen = createEl('canvas')
         offscreen.width = Math.ceil(containerRect.width * scale)
         offscreen.height = Math.ceil(containerRect.height * scale)
         const offscreenContext = offscreen.getContext('2d')
@@ -296,7 +296,7 @@ export class ParticleWordmarkEngine {
         if (contentRect.width <= 0 || contentRect.height <= 0) return
 
         const scale = Math.max(2, this.container.ownerDocument.defaultView?.devicePixelRatio || 1)
-        const offscreen = this.container.ownerDocument.createElement('canvas')
+        const offscreen = createEl('canvas')
         offscreen.width = Math.ceil(contentRect.width * scale)
         offscreen.height = Math.ceil(contentRect.height * scale)
         const offscreenContext = offscreen.getContext('2d')
@@ -532,7 +532,7 @@ export class ParticleWordmarkEngine {
     }
 
     private installCanvas(): void {
-        const canvas = this.container.ownerDocument.createElement('canvas')
+        const canvas = this.container.createEl('canvas')
         canvas.className = 'home-tab-particle-canvas'
         canvas.width = Math.ceil(this.cssWidth * this.scale)
         canvas.height = Math.ceil(this.cssHeight * this.scale)
