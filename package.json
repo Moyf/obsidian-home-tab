@@ -1,5 +1,5 @@
 {
-	"name": "home-tab",
+	"name": "home-tab-plus",
 	"version": "1.2.3",
 	"description": "A browser-like search tab for your local files.",
 	"main": "main.js",
