@@ -181,6 +181,16 @@
             e.preventDefault()
             moveSelectionHorizontally(-1)
         }
+        else if (e.key === 'Home') {
+            e.preventDefault()
+            selectedFileIndex = 0
+            scrollSelectedItemIntoView()
+        }
+        else if (e.key === 'End') {
+            e.preventDefault()
+            selectedFileIndex = filteredFileList.length - 1
+            scrollSelectedItemIntoView()
+        }
         else if (e.key === 'Enter') {
             e.preventDefault()
             const entry = filteredFileList[selectedFileIndex]
