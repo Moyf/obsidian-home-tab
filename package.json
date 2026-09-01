@@ -1,6 +1,6 @@
 {
 	"name": "home-tab-plus",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"description": "Your vault, from the first tab — a browser-like home tab with instant file search, starred and recent files, and an optional interactive particle wordmark.",
 	"main": "main.js",
 	"scripts": {
