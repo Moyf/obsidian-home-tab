@@ -92,4 +92,5 @@ Alternatively, you can install with [BRAT](https://github.com/TfTHacker/obsidian
 
 - The particle wordmark effect is inspired by [Arknights-FlowingPoints](https://github.com/BlackCoder0/Arknights-FlowingPoints) by [BlackCoder0](https://github.com/BlackCoder0) — a canvas-based recreation of the dynamic dot-matrix interaction from the [Arknights](https://ak.hypergryph.com/) official website. Our implementation is an independent rewrite of that idea.
 - Original [Home tab](https://github.com/olrenso/Obsidian-home-tab) plugin by [olrenso](https://github.com/olrenso).
+- Continued development is permitted by the original author — see [olrenso/obsidian-home-tab#65](https://github.com/olrenso/obsidian-home-tab/issues/65) for details.
 
