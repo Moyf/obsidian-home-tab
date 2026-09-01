@@ -1,6 +1,6 @@
 {
-	"id": "home-tab-mod",
-	"name": "Home tab (Mod)",
+	"id": "home-tab-plus",
+	"name": "Home Tab Plus",
 	"version": "v0.0.3-beta",
 	"minAppVersion": "1.13.0",
 	"description": "A browser-like search tab for your local files.",

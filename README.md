@@ -1,10 +1,10 @@
-# First Light
+# Home Tab Plus
 
 https://github.com/user-attachments/assets/c73c1297-568a-4991-acaf-82c623e116fe
 
-First Light is a modernized continuation of [Home tab](https://github.com/olrenso/Obsidian-home-tab) by [olrenso](https://github.com/olrenso) — an [Obsidian](https://obsidian.md/) plugin that adds a browser-like default new tab with a search bar and a grid of starred files, now with ongoing updates and new features.
+Home Tab Plus is a modernized continuation of [Home tab](https://github.com/olrenso/Obsidian-home-tab) by [olrenso](https://github.com/olrenso) — an [Obsidian](https://obsidian.md/) plugin that adds a browser-like default new tab with a search bar and a grid of starred files, now with ongoing updates and new features.
 
-*Your vault, at first light.*
+*Your vault, from the first tab.*
 
 You can search any local file in your vault, both markdown notes and attachments.
 
@@ -24,7 +24,7 @@ Compared to the original Home tab, this fork continues development with:
 - **Debug mode** — detailed logging for search and match analysis
 
 ## How to use
-By default, every new empty tab is automatically replaced with the Home tab view. You can disable this behavior in the settings and manually open a new Home tab through the command palette with the commands `Home tab: Open new Home tab` or `Home tab: Replace current tab`.
+By default, every new empty tab is automatically replaced with the Home Tab Plus view. You can disable this behavior in the settings and manually open a new tab through the command palette with the commands `Home Tab Plus: Open new tab` or `Home Tab Plus: Replace current tab`.
 
 ## Features
 ### Filter search by file type or extension
@@ -49,7 +49,7 @@ The following filters are available:
 ![](images/filters_gif.gif)
 
 ### Embedded search bar
-You can embed the Home tab view in any note with options to show recent files, starred files, or only the search bar.
+You can embed the Home Tab Plus view in any note with options to show recent files, starred files, or only the search bar.
 
 To embed the search bar to a note, you have to create a `search-bar` code block (see the following example).
 
@@ -84,8 +84,8 @@ The plugin may not work with (or interfere with) other plugins that replace the 
 
 ---
 # How to install
-The plugin will be available directly from the [Obsidian plugin browser](https://obsidian.md/plugins?id=first-light).
-Alternatively, you can install with [BRAT](https://github.com/TfTHacker/obsidian42-brat) by using the following links: `https://github.com/Moyf/first-light` or `Moyf/first-light`.
+The plugin will be available directly from the [Obsidian plugin browser](https://obsidian.md/plugins?id=home-tab-plus).
+Alternatively, you can install with [BRAT](https://github.com/TfTHacker/obsidian42-brat) by using the following links: `https://github.com/Moyf/obsidian-home-tab` or `Moyf/obsidian-home-tab`.
 
 ---
 # Acknowledgments

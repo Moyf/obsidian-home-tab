@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Compatibility
+
+- **Plugin renamed back to Home Tab Plus** (`home-tab-plus`): the 1.3.x releases shipped as "First Light" (`first-light`). After updating, Obsidian treats this as a different plugin — re-enable it and re-configure its settings once; the old `first-light` folder can be removed from `.obsidian/plugins/`. Install links now point to `Moyf/obsidian-home-tab`.
+
+### Features
+
+- Recent files keyboard navigation now supports Home/End to jump straight to the first/last entry
+
 ## [1.4.0] - 2026-08-31
 
 ### Features

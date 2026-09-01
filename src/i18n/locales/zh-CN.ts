@@ -5,7 +5,7 @@ const zhCN: BaseMessage = {
 		openNewTab: '打开新标签页',
 		replaceCurrentTab: '替换当前标签页',
 	},
-	viewName: 'First Light',
+	viewName: 'Home Tab Plus',
 	group: {
 		search: '搜索',
 		files: '文件',
