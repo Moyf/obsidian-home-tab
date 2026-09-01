@@ -478,7 +478,9 @@ export class ParticleWordmarkEngine {
         const particles: Particle[] = []
         for (let y = Math.floor(step / 2); y < height; y += step) {
             for (let x = Math.floor(step / 2); x < width; x += step) {
-                const index = (y * width + x) * 4
+                // Spacing × devicePixelRatio can be fractional. Keep the lattice
+                // positions, but sample whole pixels so RGBA channels stay aligned.
+                const index = (Math.floor(y) * width + Math.floor(x)) * 4
                 if (data[index + 3] <= MIN_ALPHA) continue
                 // Content coords -> canvas-local coords: the rasterized content
                 // is drawn centered on the zoomed canvas, so positions scale by zoom.
